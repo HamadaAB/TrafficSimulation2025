@@ -120,6 +120,24 @@ git add .
 git commit -m "Description of changes"
 git push origin main
 ```
+#### 4. Resolving Merge Conflicts
+
+If you run into merge conflicts:
+
+1. Open the conflicting files.
+2. Manually resolve conflicts.
+3. Stage the resolved files using:
+   ```sh
+   git add .
+   ```
+4. Commit the resolved changes:
+   ```sh
+   git commit -m "Resolved merge conflicts"
+   ```
+5. Push to GitHub:
+   ```sh
+   git push origin main
+   ```
 
 ### Additional Notes
 
