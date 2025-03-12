@@ -37,12 +37,12 @@ To get started, clone the project from GitHub using one of these methods:
 
 **Option A: HTTPS**
 ```sh
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+git clone https://github.com/HamadaAB/TrafficSimulation2025.git
 ```
 
 **Option B: SSH (Recommended)**
 ```sh
-git clone git@github.com:YOUR_USERNAME/YOUR_REPOSITORY.git
+git git@github.com:HamadaAB/TrafficSimulation2025.git
 ```
 
 #### Setting up SSH for GitHub (If not already configured)
