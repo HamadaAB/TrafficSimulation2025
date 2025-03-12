@@ -71,8 +71,8 @@ add_executable(release_target ${RELEASE_SOURCE_FILES})
 # Create DEBUG target
 add_executable(debug_target ${DEBUG_SOURCE_FILES})
 
-# Link library
-target_link_libraries(debug_target gtest)
+## Link library
+#target_link_libraries(debug_target gtest)
 
 
 
