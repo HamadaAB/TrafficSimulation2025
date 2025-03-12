@@ -42,7 +42,7 @@ git clone https://github.com/HamadaAB/TrafficSimulation2025.git
 
 **Option B: SSH (Recommended)**
 ```sh
-git git@github.com:HamadaAB/TrafficSimulation2025.git
+git clone git@github.com:HamadaAB/TrafficSimulation2025.git
 ```
 
 #### Setting up SSH for GitHub (If not already configured)
