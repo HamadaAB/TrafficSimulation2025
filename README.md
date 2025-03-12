@@ -33,11 +33,58 @@ Made by: **Hamada Abuarab**, **Mohammed Al-Attabi** and **Alexander Matheï**
 
 #### 1. Clone the Repository
 
-To get started, clone the project from GitHub using:
+To get started, clone the project from GitHub using one of these methods:
 
+**Option A: HTTPS**
 ```sh
 git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
 ```
+
+**Option B: SSH (Recommended)**
+```sh
+git clone git@github.com:YOUR_USERNAME/YOUR_REPOSITORY.git
+```
+
+#### Setting up SSH for GitHub (If not already configured)
+
+**🔹 Step 1: Check for an Existing SSH Key**
+Before creating a new key, check if you already have one:
+
+```sh
+ls ~/.ssh/id_rsa.pub
+```
+* If the file **exists**, you already have an SSH key. You can use it or create a new one.
+* If it **does not exist**, proceed to Step 2.
+
+**🔹 Step 2: Generate a New SSH Key**
+Run this command in your terminal:
+
+```sh
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+* Replace `"your_email@example.com"` with your GitHub email.
+* When asked for a file name, press **Enter** to save it as the default (`~/.ssh/id_rsa`).
+* When asked for a **passphrase**, you can press Enter to skip (optional but more secure).
+
+**🔹 Step 3: Add the SSH Key to GitHub**
+1. Copy your public key to the clipboard using this command:
+
+```sh
+cat ~/.ssh/id_rsa.pub
+```
+2. Go to **GitHub** → **Settings** → **SSH and GPG keys**.
+3. Click **New SSH Key**.
+4. Paste the key into the box and give it a name (e.g., "My Laptop").
+5. Click **Add SSH Key**.
+
+**🔹 Step 5: Test the Connection**
+Run this command to verify your SSH setup:
+
+```sh
+ssh -T git@github.com
+```
+* If it says **"Hi YOUR_USERNAME! You've successfully authenticated."**, you're good to go! 🎉
+* If there's an error, let me know, and I'll help troubleshoot!
 
 #### 2. Open in CLion
 
@@ -74,30 +121,10 @@ git commit -m "Description of changes"
 git push origin main
 ```
 
-#### 4. Resolving Merge Conflicts
-
-If you run into merge conflicts:
-
-1. Open the conflicting files.
-2. Manually resolve conflicts.
-3. Stage the resolved files using:
-   ```sh
-   git add .
-   ```
-4. Commit the resolved changes:
-   ```sh
-   git commit -m "Resolved merge conflicts"
-   ```
-5. Push to GitHub:
-   ```sh
-   git push origin main
-   ```
-
 ### Additional Notes
 
 - Always pull changes before starting new work.
 - Keep commit messages clear and descriptive.
-- Use branches for major changes (`git checkout -b feature-branch`).
+
 
 Happy coding! 🚀
-
