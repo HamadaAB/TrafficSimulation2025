@@ -1,6 +1,12 @@
 
 
-#ifndef ROA_H
-#define ROA_H
+#ifndef ROAD_H
+#define ROAD_H
+# include "string"
 
-#endif //ROA_H
+class Road {
+public:
+    std::string name;
+    int length;
+};
+#endif //ROAD_H
