@@ -83,7 +83,7 @@ void PrintSituation() {
 
     // gives the vehicle number and his values
     // geeft het voertuig nummer en zijn gegevens
-    for (int i = 0; i<vehicles.size(); i++) {
+    for (int i = 0; i<int(vehicles.size()); i++) {
         std::cout<<"Voertuig " << i << std::endl;
         PrintVehicleInf(vehicles[i]);
     }
