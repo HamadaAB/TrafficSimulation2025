@@ -1,0 +1,33 @@
+<!-- The big test – everything working together THIS I UESD TO CHECK THINGS MANUALY AND THEN I AUTOMATCLYY-->
+
+
+<SIMULATION>
+    <!-- Main test road -->
+    <BAAN>
+        <naam>Highway</naam>
+        <lengte>1000</lengte>
+    </BAAN>
+
+    <!-- Initial vehicles -->
+    <VOERTUIG>
+        <baan>Highway</baan>
+        <positie>900</positie> <!-- Will exit quickly -->
+    </VOERTUIG>
+    <VOERTUIG>
+        <baan>Highway</baan>
+        <positie>300</positie>
+    </VOERTUIG>
+
+    <!-- Traffic lights -->
+    <VERKEERSLICHT>
+        <baan>Highway</baan>
+        <positie>500</positie>
+        <cyclus>30</cyclus> <!-- Changes every ~0.5 seconds -->
+    </VERKEERSLICHT>
+
+    <!-- Vehicle generator -->
+    <VOERTUIGGENERATOR>
+        <baan>Highway</baan>
+        <frequentie>5</frequentie> <!-- Spawns every ~5 seconds -->
+    </VOERTUIGGENERATOR>
+</SIMULATION>

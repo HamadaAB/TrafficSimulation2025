@@ -1,0 +1,12 @@
+<!-- Tests if the sim throws out roads and factories with messed-up numbers. - 100 -->
+
+<SIMULATION>
+    <BAAN>
+        <naam>InvalidRoad</naam>
+        <lengte>-100</lengte> <!-- Invalid length -->
+    </BAAN>
+    <VOERTUIGGENERATOR>
+        <baan>InvalidRoad</baan>
+        <frequentie>0</frequentie> <!-- Invalid frequency -->
+    </VOERTUIGGENERATOR>
+</SIMULATION>

@@ -1,0 +1,7 @@
+<!-- Tests if the sim rejects roads that are missing important info. -->
+<!-- This road forgot to tell us its name  -->
+
+<BAAN>
+    <lengte>100</lengte>
+    <!-- Missing <naam> -->
+</BAAN>

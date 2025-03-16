@@ -1,0 +1,14 @@
+<!-- Tests if traffic lights change colors when they’re supposed to. -->
+
+
+<SIMULATION>
+    <BAAN>
+        <naam>TestRoad</naam>
+        <lengte>100</lengte>
+    </BAAN>
+    <VERKEERSLICHT>
+        <baan>TestRoad</baan>
+        <positie>50</positie>
+        <cyclus>10</cyclus>
+    </VERKEERSLICHT>
+</SIMULATION>

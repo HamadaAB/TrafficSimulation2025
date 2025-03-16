@@ -1,0 +1,17 @@
+<!-- Tests if the car factory doesn't spawn new cars when there's already a car too close. -->
+<!-- There's a car STANDING at 1m, so no new cars should pop up at the start. -->
+
+<SIMULATION>
+    <BAAN>
+        <naam>TestRoad</naam>
+        <lengte>100</lengte>
+    </BAAN>
+    <VOERTUIGGENERATOR>
+        <baan>TestRoad</baan>
+        <frequentie>5</frequentie>
+    </VOERTUIGGENERATOR>
+    <VOERTUIG>
+        <baan>TestRoad</baan>
+        <positie>1</positie>
+    </VOERTUIG>
+</SIMULATION>

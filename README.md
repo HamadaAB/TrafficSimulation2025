@@ -11,17 +11,17 @@ Made by: **Hamada Abuarab**, **Mohammed Al-Attabi** and **Alexander Matheï**
 ### Overview
 
 | Case     | Input                             | Priority  | Status |
-| -------- | --------------------------------- | --------- | ------ |
+| -------- | --------------------------------- | --------- |--------|
 | ***1:*** | ***Input***                       |           |        |
-| 1.1      | Read traffic situation            | Required  | P      |
+| 1.1      | Read traffic situation            | Required  | C      |
 | 1.2      | Read vehicle generators           | Important | X      |
 | ***2:*** | ***Output***                      |           |        |
-| 2.1      | Simple output                     | Required  | T      |
+| 2.1      | Simple output                     | Required  | C      |
 | ***3:*** | ***Simulation***                  |           |        |
-| 3.1      | Driving of vehicle                | Required  | T      |
-| 3.2      | Simulation of traffic light       | Required  | T      |
-| 3.3      | Automatic Simulation              | Required  | T      |
-| 3.4      | Simulation with vehicle generator | Important | X      |
+| 3.1      | Driving of vehicle                | Required  | C      |
+| 3.2      | Simulation of traffic light       | Required  | C      |
+| 3.3      | Automatic Simulation              | Required  | C      |
+| 3.4      | Simulation with vehicle generator | Important | C      |
 
 ---
 

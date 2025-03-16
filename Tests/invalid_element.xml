@@ -1,0 +1,6 @@
+<!-- Checks if the sim skips over XML tags it doesn’t recognize. -->
+<!-- Uses <INVALID_ELEMENT>  -->
+
+<INVALID_ELEMENT>
+    <naam>TestRoad</naam>
+</INVALID_ELEMENT>

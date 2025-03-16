@@ -1,0 +1,11 @@
+<!-- Tests/vehicle_generator.xml -->
+<SIMULATION>
+    <BAAN>
+        <naam>TestRoad</naam>
+        <lengte>100</lengte>
+    </BAAN>
+    <VOERTUIGGENERATOR>
+        <baan>TestRoad</baan>
+        <frequentie>5</frequentie>
+    </VOERTUIGGENERATOR>
+</SIMULATION>

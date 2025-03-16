@@ -1,0 +1,17 @@
+<!-- Tests if cars actually stop before they hit a red light. -->
+
+<SIMULATION>
+    <BAAN>
+        <naam>TestRoad</naam>
+        <lengte>160</lengte> <!-- Extend road to 160m -->
+    </BAAN>
+    <VERKEERSLICHT>
+        <baan>TestRoad</baan>
+        <positie>145</positie> <!-- Light at 145m -->
+        <cyclus>1000000000</cyclus>
+    </VERKEERSLICHT>
+    <VOERTUIG>
+        <baan>TestRoad</baan>
+        <positie>130</positie> <!-- 15m before light -->
+    </VOERTUIG>
+</SIMULATION>

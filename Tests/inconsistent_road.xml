@@ -1,0 +1,6 @@
+<!-- Checks if the sim ignores cars that try to roll on roads that dont exist. -->
+<!-- This car thinks its on "NonExistentRoad" but nah, that road aint real. -->
+<VOERTUIG>
+    <baan>NonExistentRoad</baan>
+    <positie>10</positie>
+</VOERTUIG>

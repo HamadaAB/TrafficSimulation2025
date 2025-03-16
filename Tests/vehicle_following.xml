@@ -1,0 +1,15 @@
+<!-- Tests/vehicle_following.xml -->
+<SIMULATION>
+    <BAAN>
+        <naam>TestRoad</naam>
+        <lengte>200</lengte>
+    </BAAN>
+    <VOERTUIG>
+        <baan>TestRoad</baan>
+        <positie>14</positie> <!-- Front car -->
+    </VOERTUIG>
+    <VOERTUIG>
+        <baan>TestRoad</baan>
+        <positie>10</positie>
+    </VOERTUIG>
+</SIMULATION>

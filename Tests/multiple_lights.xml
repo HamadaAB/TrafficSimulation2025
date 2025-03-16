@@ -1,0 +1,23 @@
+<!-- Tests if cars pay attention to the closest traffic light. -->
+<!-- Two lights at 100m and 150m, and a car at 90m – it should only care about the one at 100m. -->
+
+<SIMULATION>
+    <BAAN>
+        <naam>TestRoad</naam>
+        <lengte>200</lengte>
+    </BAAN>
+    <VERKEERSLICHT>
+        <baan>TestRoad</baan>
+        <positie>100</positie>
+        <cyclus>20</cyclus>
+    </VERKEERSLICHT>
+    <VERKEERSLICHT>
+        <baan>TestRoad</baan>
+        <positie>150</positie>
+        <cyclus>20</cyclus>
+    </VERKEERSLICHT>
+    <VOERTUIG>
+        <baan>TestRoad</baan>
+        <positie>90</positie>
+    </VOERTUIG>
+</SIMULATION>

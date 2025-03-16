@@ -1,0 +1,21 @@
+<!-- Tests if multiple car factories can do their thing on different roads. -->
+<!-- Two factories, one on RoadA and one on RoadB – both should be MAKING cars. -->
+
+<SIMULATION>
+    <BAAN>
+        <naam>RoadA</naam>
+        <lengte>100</lengte>
+    </BAAN>
+    <BAAN>
+        <naam>RoadB</naam>
+        <lengte>100</lengte>
+    </BAAN>
+    <VOERTUIGGENERATOR>
+        <baan>RoadA</baan>
+        <frequentie>5</frequentie>
+    </VOERTUIGGENERATOR>
+    <VOERTUIGGENERATOR>
+        <baan>RoadB</baan>
+        <frequentie>5</frequentie>
+    </VOERTUIGGENERATOR>
+</SIMULATION>

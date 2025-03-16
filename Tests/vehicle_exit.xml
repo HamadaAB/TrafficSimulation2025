@@ -1,0 +1,10 @@
+<SIMULATION>
+    <BAAN>
+        <naam>TestRoad</naam>
+        <lengte>100</lengte>
+    </BAAN>
+    <VOERTUIG>
+        <baan>TestRoad</baan>
+        <positie>99</positie>
+    </VOERTUIG>
+</SIMULATION>
