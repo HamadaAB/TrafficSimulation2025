@@ -68,9 +68,9 @@ TEST_F(TrafficSimTest, VehicleMovement) {
 
   ASSERT_EQ(vehicles.size(), 1u) << "Expected 1 vehicle, got " << vehicles.size();
   Vehicle& car = vehicles[0];
-  double initialPos = car.position;
+  double initialPos = car.get_position();
   UpdateVehicleMovement(Constants::SimulationTimeStep, 0.0);
-  EXPECT_GT(car.position, initialPos); // Vehicle should move forward
+  EXPECT_GT(car.get_position(), initialPos); // Vehicle should move forward
 }
 
 // Test 5: Traffic light cycle
@@ -86,9 +86,9 @@ TEST_F(TrafficSimTest, TrafficLightCycle) {
   ASSERT_FALSE(trafficlights.empty()) << "No traffic lights found!";
   TrafficLight& light = trafficlights[0];
 
-  bool initialColor = light.is_green;
-  UpdateTrafficLights(light.cyclus * Constants::SimulationTimeStep + 0.1); // Force cycle
-  EXPECT_NE(light.is_green, initialColor); // Light should change color
+  bool initialColor = light.is_green();
+  UpdateTrafficLights(light.get_cyclus() * Constants::SimulationTimeStep + 0.1); // Force cycle
+  EXPECT_NE(light.is_green(), initialColor); // Light should change color
 }
 
 // Test 6: Vehicle generation
@@ -113,13 +113,13 @@ TEST_F(TrafficSimTest, VehicleFollowing) {
   Vehicle& frontCar = vehicles[0]; // Position 50
   Vehicle& rearCar = vehicles[1];  // Position 10
 
-  EXPECT_GT(frontCar.position, rearCar.position);
+  EXPECT_GT(frontCar.get_position(), rearCar.get_position());
 
   // Simulate movement
   UpdateVehicleMovement(Constants::SimulationTimeStep, 0.0);
 
   // Rear car should decelerate to avoid collision
-  EXPECT_LT(rearCar.acceleration, 0.0);
+  EXPECT_LT(rearCar.get_acceleration(), 0.0);
 }
 
 TEST_F(TrafficSimTest, MultipleTrafficLights) {
@@ -131,11 +131,11 @@ TEST_F(TrafficSimTest, MultipleTrafficLights) {
   Vehicle& car = vehicles[0];
 
   // Force the nearest light (at 100m) to turn red
-  trafficlights[0].is_green = false;
+  trafficlights[0].set_light(false);
   UpdateVehicleMovement(Constants::SimulationTimeStep, 0.0);
 
   // Car should decelerate for the closer light (100m)
-  EXPECT_LT(car.speed, Constants::MaxAbsoluteSpeed);
+  EXPECT_LT(car.get_speed(), Constants::MaxAbsoluteSpeed);
 }
 
 TEST_F(TrafficSimTest, VehicleExitsRoad) {
@@ -179,9 +179,9 @@ TEST_F(TrafficSimTest, StopDistance) {
   // Force light to stay RED
   ASSERT_FALSE(trafficlights.empty());
   TrafficLight& light = trafficlights[0];
-  light.is_green = false;
-  light.cyclus = 1000000000; // Match XML value
-  light.last_change_time = 0.0; // Reset timer
+  light.set_light(false);
+  light.set_cyclus(1000000000); // Match XML value
+  light.set_last_change_time(0.0); // Reset timer
 
   // Simulate steps (2000 steps ≈ 33.2 seconds)
   for (int i = 0; i < 2000; i++) {
@@ -189,8 +189,8 @@ TEST_F(TrafficSimTest, StopDistance) {
   }
 
   // Verify vehicle stopped before the light
-  EXPECT_NEAR(vehicles[0].speed, 0.0, 0.1);
-  EXPECT_LT(vehicles[0].position, 145 - Constants::VehicleLength);
+  EXPECT_NEAR(vehicles[0].get_speed(), 0.0, 0.1);
+  EXPECT_LT(vehicles[0].get_position(), 145 - Constants::VehicleLength);
 }
 
 TEST_F(TrafficSimTest, MultipleGenerators) {
@@ -215,21 +215,21 @@ TEST_F(TrafficSimTest, FullSimulationTest) {
 
     // Check if the road was loaded correctly
     ASSERT_EQ(roads.size(), 1u) << "Expected 1 road, got " << roads.size();
-    EXPECT_EQ(roads[0].name, "Highway") << "Road name should be 'Highway'";
-    EXPECT_EQ(roads[0].length, 1000) << "Road length should be 1000m";
+    EXPECT_EQ(roads[0].get_name(), "Highway") << "Road name should be 'Highway'";
+    EXPECT_EQ(roads[0].get_length(), 1000) << "Road length should be 1000m";
 
     // Check if the vehicles were loaded correctly
     ASSERT_EQ(vehicles.size(), 2u) << "Expected 2 vehicles, got " << vehicles.size();
-    EXPECT_EQ(vehicles[0].road_name, "Highway") << "First car should be on 'Highway'";
-    EXPECT_EQ(vehicles[0].position, 900.0) << "First car should start at 900m";
-    EXPECT_EQ(vehicles[1].road_name, "Highway") << "Second car should be on 'Highway'";
-    EXPECT_EQ(vehicles[1].position, 300.0) << "Second car should start at 300m";
+    EXPECT_EQ(vehicles[0].get_road_name(), "Highway") << "First car should be on 'Highway'";
+    EXPECT_EQ(vehicles[0].get_position(), 900.0) << "First car should start at 900m";
+    EXPECT_EQ(vehicles[1].get_road_name(), "Highway") << "Second car should be on 'Highway'";
+    EXPECT_EQ(vehicles[1].get_position(), 300.0) << "Second car should start at 300m";
 
     // Check if the traffic light was loaded correctly
     ASSERT_EQ(trafficlights.size(), 1u) << "Expected 1 traffic light, got " << trafficlights.size();
-    EXPECT_EQ(trafficlights[0].road_name, "Highway") << "Traffic light should be on 'Highway'";
-    EXPECT_EQ(trafficlights[0].position, 500) << "Traffic light should be at 500m";
-    EXPECT_EQ(trafficlights[0].cyclus, 30) << "Traffic light cycle should be 30 steps";
+    EXPECT_EQ(trafficlights[0].get_road_name(), "Highway") << "Traffic light should be on 'Highway'";
+    EXPECT_EQ(trafficlights[0].get_position(), 500) << "Traffic light should be at 500m";
+    EXPECT_EQ(trafficlights[0].get_cyclus(), 30) << "Traffic light cycle should be 30 steps";
 
     // Check if the vehicle generator was loaded correctly
     ASSERT_EQ(vehicle_gens.size(), 1u) << "Expected 1 vehicle generator, got " << vehicle_gens.size();
@@ -252,7 +252,7 @@ TEST_F(TrafficSimTest, FullSimulationTest) {
     EXPECT_GT(vehicles.size(), 1u) << "At least one new car should have been spawned";
 
     // Check if traffic light changed state
-    EXPECT_NE(trafficlights[0].is_green, true) << "Traffic light should have changed from green to red";
+    EXPECT_NE(trafficlights[0].is_green(), true) << "Traffic light should have changed from green to red";
 }
 
 

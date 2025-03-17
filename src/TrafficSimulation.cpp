@@ -59,12 +59,12 @@ void LoadElement(TiXmlElement* element) {
         }
 
         try {
-            newRoad.name = nameElem->GetText();
-            newRoad.length = std::stoi(lengthElem->GetText());
+            newRoad.set_name(nameElem->GetText());
+            newRoad.set_length(std::stoi(lengthElem->GetText()));
 
             // the length of the rooad must be positive
-            if (newRoad.length <= 0) {
-                std::cerr << "BAD ROAD LENGTH: " << newRoad.length << std::endl;
+            if (newRoad.get_length() <= 0) {
+                std::cerr << "BAD ROAD LENGTH: " << newRoad.get_length() << std::endl;
                 return;
             }
 
@@ -88,21 +88,21 @@ void LoadElement(TiXmlElement* element) {
         }
 
         try {
-            newLight.road_name = roadElem->GetText();
-            newLight.position = std::stoi(posElem->GetText());
-            newLight.cyclus = std::stoi(cycleElem->GetText());
+            newLight.set_road_name(roadElem->GetText());
+            newLight.set_position(std::stoi(posElem->GetText()));
+            newLight.set_cyclus(std::stoi(cycleElem->GetText()));
 
             // Check if there is a road
             bool roadExists = false;
             for (const Road& r : roads) {
-                if (r.name == newLight.road_name) {
+                if (r.get_name() == newLight.get_road_name()) {
                     roadExists = true;
                     break;
                 }
             }
 
             if (!roadExists) {
-                std::cerr << "TRAFFIC LIGHT ROAD NOT FOUND: " << newLight.road_name << std::endl;
+                std::cerr << "TRAFFIC LIGHT ROAD NOT FOUND: " << newLight.get_road_name() << std::endl;
                 return;
             }
 
@@ -130,7 +130,7 @@ void LoadElement(TiXmlElement* element) {
             // Check if road actually exists
             bool roadExists = false;
             for (const Road& r : roads) {
-                if (r.name == roadName) {
+                if (r.get_name() == roadName) {
                     roadExists = true;
                     break;
                 }
@@ -173,7 +173,7 @@ void LoadElement(TiXmlElement* element) {
             // Check if road actually exists
             bool roadExists = false;
             for (const Road& r : roads) {
-                if (r.name == newGen.road) {
+                if (r.get_name() == newGen.road) {
                     roadExists = true;
                     break;
                 }
@@ -205,13 +205,13 @@ void UpdateVehicleMovement(double dt, double current_time) {
 
     // Update traffic lights first
     for (TrafficLight& light : trafficlights) {
-        double cycleSeconds = light.cyclus * Constants::SimulationTimeStep;
-        if (current_time - light.last_change_time >= cycleSeconds) {
+        double cycleSeconds = light.get_cyclus() * Constants::SimulationTimeStep;
+        if (current_time - light.get_last_change_time() >= cycleSeconds) {
 
-            light.is_green = !light.is_green;
-            light.last_change_time = current_time;
-            std::cout << "Light at " << light.position << "m changed to "
-                      << (light.is_green ? "GREEN" : "RED") << std::endl; // Debug
+            light.change_light();
+            light.set_last_change_time(current_time);
+            std::cout << "Light at " << light.get_position() << "m changed to "
+                      << (light.is_green() ? "GREEN" : "RED") << std::endl; // Debug
         }
     }
 
@@ -220,7 +220,7 @@ void UpdateVehicleMovement(double dt, double current_time) {
         // Find the road the vehicle is on
         Road* currentRoad = nullptr;
         for (Road& r : roads) {
-            if (r.name == vehicle.road_name) {
+            if (r.get_name() == vehicle.get_road_name()) {
                 currentRoad = &r;
                 break;
             }
@@ -232,11 +232,11 @@ void UpdateVehicleMovement(double dt, double current_time) {
         double effectiveSpeed = Constants::MaxAbsoluteSpeed;
 
         for (const TrafficLight& light : trafficlights) {
-            if (light.road_name == vehicle.road_name) {
-                double distanceToLight = light.position - vehicle.position;
+            if (light.get_road_name() == vehicle.get_road_name()) {
+                double distanceToLight = light.get_position() - vehicle.get_position();
 
                 // Only respond to lights ahead of the vehicle
-                if (distanceToLight > 0 && !light.is_green) {
+                if (distanceToLight > 0 && !light.is_green()) {
                     // Red light logic
                     if (distanceToLight <= Constants::StopDistance) {
                         shouldStop = true;
@@ -245,14 +245,14 @@ void UpdateVehicleMovement(double dt, double current_time) {
                     }
                     else if (distanceToLight <= Constants::DecelerationDistance) {
                         effectiveSpeed = Constants::SlowdownFactor * Constants::MaxAbsoluteSpeed;
-                        std::cout << "Car at " << vehicle.position << "m slowing for light ahead" << std::endl;
+                        std::cout << "Car at " << vehicle.get_position() << "m slowing for light ahead" << std::endl;
                     }
                 }
             }
         }
 
 
-            vehicle.acceleration = ComputeAcceleration(vehicle, effectiveSpeed);
+            vehicle.set_acceleration(ComputeAcceleration(vehicle, effectiveSpeed));
 
 
         // Update position and speed
@@ -260,39 +260,39 @@ void UpdateVehicleMovement(double dt, double current_time) {
 
 
 
-            vehicle.acceleration = -Constants::MaxDeceleration;
+            vehicle.set_acceleration(-Constants::MaxDeceleration);
 
-            if (vehicle.speed + vehicle.acceleration * dt < 0) {
+            if (vehicle.get_speed() + vehicle.get_acceleration() * dt < 0) {
                 // We would go negative, so use formula B.2 for stopping completely
-                vehicle.position -= (vehicle.speed * vehicle.speed) / (2 * vehicle.acceleration);
-                vehicle.speed = 0;
+                vehicle.move_position(-(vehicle.get_speed() * vehicle.get_speed()) / (2 * vehicle.get_acceleration()));
+                vehicle.set_speed(0);
             } else {
 
-                vehicle.speed += vehicle.acceleration * dt;
-                vehicle.position += vehicle.speed * dt + 0.5 * vehicle.acceleration * dt * dt;
+                vehicle.add_speed(vehicle.get_acceleration() * dt);
+                vehicle.move_position(vehicle.get_speed() * dt + 0.5 * vehicle.get_acceleration() * dt * dt);
             }
         } else {
             // Normal movement using formula B.2
-            if (vehicle.speed + vehicle.acceleration * dt < 0) {
+            if (vehicle.get_speed() + vehicle.get_acceleration() * dt < 0) {
                 // Speed would go negative, so stop completely
-                vehicle.position -= (vehicle.speed * vehicle.speed) / (2 * vehicle.acceleration);
-                vehicle.speed = 0;
+                vehicle.move_position(-(vehicle.get_speed() * vehicle.get_speed()) / (2 * vehicle.get_acceleration()));
+                vehicle.set_speed(0);
             } else {
                 // Update speed
-                vehicle.speed += vehicle.acceleration * dt;
+                vehicle.add_speed(vehicle.get_acceleration() * dt);
                 // Limit speed to effective max speed
-                if (vehicle.speed > effectiveSpeed) {
-                    vehicle.speed = effectiveSpeed;
+                if (vehicle.get_speed() > effectiveSpeed) {
+                    vehicle.set_speed(effectiveSpeed);
                 }
                 // Update position
-                vehicle.position += vehicle.speed * dt + 0.5 * vehicle.acceleration * dt * dt;
+                vehicle.move_position(vehicle.get_speed() * dt + 0.5 * vehicle.get_acceleration() * dt * dt);
             }
         }
 
         // Remove vehicles that exit the road
-        if (vehicle.position >= currentRoad->length - Constants::VehicleLength) {
-            std::cout << "Vehicle exited " << vehicle.road_name
-                      << " at " << vehicle.position << "m" << std::endl;
+        if (vehicle.get_position() >= currentRoad->get_length() - Constants::VehicleLength) {
+            std::cout << "Vehicle exited " << vehicle.get_road_name()
+                      << " at " << vehicle.get_position() << "m" << std::endl;
             continue; // Skip adding to updatedVehicles
         }
         updatedVehicles.push_back(vehicle);
@@ -324,7 +324,7 @@ void GenerateVehicles(double current_time) {
         // Find the target road
         Road* targetRoad = nullptr;
         for (Road& r : roads) {
-            if (r.name == factory.road) {
+            if (r.get_name() == factory.road) {
                 targetRoad = &r;
                 break;
             }
@@ -339,7 +339,7 @@ void GenerateVehicles(double current_time) {
         double checkDistance = 2 * Constants::VehicleLength;
 
         for (const Vehicle& car : vehicles) {
-            if (car.road_name == factory.road && car.position < checkDistance) {
+            if (car.get_road_name() == factory.road && car.get_position() < checkDistance) {
                 spaceFree = false;
                 std::cout << "Road start occupied" << std::endl;
                 break;
@@ -372,9 +372,9 @@ double ComputeAcceleration(const Vehicle& car, double effective_vmax) {
 
     // Find closest car ahead
     for (const Vehicle& other : vehicles) {
-        if (other.road_name == car.road_name && other.position > car.position) {
+        if (other.get_road_name() == car.get_road_name() && other.get_position() > car.get_position()) {
 
-            double distance = other.position - car.position - Constants::VehicleLength; // Add this
+            double distance = other.get_position() - car.get_position() - Constants::VehicleLength; // Add this
             if (distance < gap) {
                 gap = distance;
                 frontCar = const_cast<Vehicle*>(&other);
@@ -386,18 +386,18 @@ double ComputeAcceleration(const Vehicle& car, double effective_vmax) {
     double delta = 0.0;
     if (frontCar) {
 
-        double speedDiff = car.speed - frontCar->speed;
+        double speedDiff = car.get_speed() - frontCar->get_speed();
         if (gap < Constants::DecelerationDistance) {
             std::cout << "Gap: " << gap<< ", SpeedDiff: " << speedDiff<< ", delta: " << delta << std::endl; // Debug
             delta = (Constants::MinFollowingDistance +
-                    std::max(0.0, (car.speed * speedDiff) /
+                    std::max(0.0, (car.get_speed() * speedDiff) /
                     (2 * std::sqrt(Constants::MaxAcceleration * Constants::MaxDeceleration)))) / gap;
         }
     }
 
     // Calculate acceleration using formula from specification B.3
     double acceleration = Constants::MaxAcceleration *
-                         (1 - pow(car.speed/effective_vmax, 4) - delta*delta);
+                         (1 - pow(car.get_speed()/effective_vmax, 4) - delta*delta);
 
 
 
@@ -424,9 +424,9 @@ void PrintSituation() {
 /** Shows details for one car */
 
 void PrintVehicleInf(const Vehicle& car) {
-    std::cout << "  Road: " << car.road_name << "\n";
-    std::cout << "  Position: " << car.position << " m\n";
-    std::cout << "  Speed: " << car.speed << " m/s\n";
+    std::cout << "  Road: " << car.get_road_name() << "\n";
+    std::cout << "  Position: " << car.get_position() << " m\n";
+    std::cout << "  Speed: " << car.get_speed() << " m/s\n";
 }
 
 
@@ -437,10 +437,10 @@ void PrintVehicleInf(const Vehicle& car) {
 
 void UpdateTrafficLights(double current_time) {
     for (TrafficLight& tlight : trafficlights) {
-        double cycleTime = tlight.cyclus * Constants::SimulationTimeStep;  // Convert to seconds!
-        if (current_time - tlight.last_change_time >= cycleTime) {
-            tlight.is_green = !tlight.is_green;
-            tlight.last_change_time = current_time;
+        double cycleTime = tlight.get_cyclus() * Constants::SimulationTimeStep;  // Convert to seconds!
+        if (current_time - tlight.get_last_change_time() >= cycleTime) {
+            tlight.change_light();
+            tlight.set_last_change_time(current_time);
         }
     }
 }
