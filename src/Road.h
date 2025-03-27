@@ -11,10 +11,10 @@ private:
     std::string name;
     int length;
 public:
-    [[nodiscard]] std::string get_name() const{return name;}
-    [[nodiscard]] int get_length() const{return length;}
+    [[nodiscard]] std::string get_name() const;
+    [[nodiscard]] int get_length() const;
 
-    void set_name(std::string new_name) {name = std::move(new_name);}
-    void set_length(int new_length) {length = new_length;}
+    void set_name(std::string new_name);
+    void set_length(int new_length);
 };
 #endif //ROAD_H

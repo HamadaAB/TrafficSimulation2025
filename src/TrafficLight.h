@@ -14,18 +14,19 @@ private:
     double last_change_time; // Time when the light last changed state
 
 public:
-    [[nodiscard]] std::string get_road_name() const{return road_name;}
-    [[nodiscard]] int get_position() const{return position;}
-    [[nodiscard]] int get_cyclus() const{return cyclus;}
-    [[nodiscard]] bool is_green() const{return is_light_green;}
-    [[nodiscard]] double get_last_change_time() const{return last_change_time;}
-
-    void set_road_name(const std::string& name) {road_name = name;}
-    void set_position(int pos) {position = pos;}
-    void set_cyclus(int new_cyclus) {cyclus = new_cyclus;}
+    // getters
+    [[nodiscard]] std::string get_road_name() const;
+    [[nodiscard]] int get_position() const;
+    [[nodiscard]] int get_cyclus() const;
+    [[nodiscard]] bool is_green() const;
+    [[nodiscard]] double get_last_change_time() const;
+    // setters
+    void set_road_name(const std::string& name);
+    void set_position(int pos);
+    void set_cyclus(int new_cyclus);
+    void set_light(bool light);
+    void set_last_change_time(double time);
     void change_light();
-    void set_light(bool light) {is_light_green = light;}
-    void set_last_change_time(double time) {last_change_time = time;}
 
     // Constructor to initialize the light
     TrafficLight() : is_light_green(true), last_change_time(0.0) {}
