@@ -116,11 +116,19 @@ void LoadElement(TiXmlElement* element) {
     else if (elementType == "VOERTUIG") {
         TiXmlElement* roadElem = element->FirstChildElement("baan");
         TiXmlElement* posElem = element->FirstChildElement("positie");
+        TiXmlElement* typElem = element->FirstChildElement("type");
 
         // Check required elements exist
         if (!roadElem || !posElem) {
             std::cerr << "BAD VEHICLE: Missing data" << std::endl;
             return;
+        }
+        std::string typ;
+        if (!typElem) {
+            std::cerr << "NO VEHICLE TYPE" << std::endl;
+            typ = "autowagen";
+        } else {
+            typ = typElem->GetText();
         }
 
         try {
@@ -141,7 +149,7 @@ void LoadElement(TiXmlElement* element) {
                 return;
             }
 
-            vehicles.emplace_back(roadName, position);
+            vehicles.emplace_back(roadName, position, typ);
         }
         catch (...) {
             std::cerr << "INVALID VEHICLE NUMBER FORMAT" << std::endl;

@@ -1,4 +1,16 @@
 #include "Vehicle.h"
+// normal constructor
+Vehicle::Vehicle(const std::string&  road, double pos, double spd, double acc) {
+    road_name = road;
+    position = pos;
+    speed = spd;
+    acceleration = acc;
+}
+// constructor with type
+Vehicle::Vehicle(std::string&  road, double pos, std::string& typ, double spd, double acc)
+                : Vehicle(road, pos, spd, acc) {
+    type = string_to_car_type(typ);
+}
 
 std::string Vehicle::get_road_name() const { return road_name; }
 double Vehicle::get_position() const { return position; }
@@ -15,3 +27,13 @@ void Vehicle::set_length(double len) { length = len; }
 
 void Vehicle::add_speed(double spd) {speed += spd;}
 void Vehicle::move_position(double pos) {position += pos;}
+
+// converts string to the types of a car; autowagen, bus,...
+Type string_to_car_type(const std::string& typ) {
+    if(typ == "auto") { return autowagen; }
+    else if(typ == "bus") { return bus; }
+    else if(typ == "brandweerwagen") { return brandweerwagen; }
+    else if(typ == "ziekenwagen") { return ziekenwagen; }
+    else if(typ == "politiecombi") { return politiecombi; }
+    return autowagen;
+}

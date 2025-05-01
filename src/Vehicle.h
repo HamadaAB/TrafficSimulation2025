@@ -6,6 +6,9 @@
 #include "string"
 #include "Constants.h"
 
+// auto is een keyword en dus is het makkelijker om een andere naam te kiezen
+enum Type {autowagen, bus, brandweerwagen, ziekenwagen, politiecombi};
+
 class Vehicle {
 private:
     std::string road_name;
@@ -13,12 +16,15 @@ private:
     double speed;
     double acceleration;
     double length = Constants::VehicleLength;
+    Type type = autowagen;  // default
 public:
     // Or a constructor that allows setting values when creating a vehicle
-    Vehicle(const std::string  road, double pos,
+    Vehicle(const std::string&  road, double pos,
             double spd = 10.0,
-            double acc = Constants::MaxAcceleration)
-            : road_name(road), position(pos), speed(spd), acceleration(acc) {}
+            double acc = Constants::MaxAcceleration);
+
+    Vehicle(std::string& road, double pos, std::string& typ,
+            double spd = 10.0, double acc = Constants::MaxAcceleration);
 
     // Getters
     [[nodiscard]] std::string get_road_name() const;
@@ -38,5 +44,6 @@ public:
     void move_position(double pos);
 };
 
+Type string_to_car_type(const std::string& typ);
 
 #endif //VEHICLE_H
