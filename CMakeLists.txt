@@ -30,7 +30,7 @@ set(RELEASE_SOURCE_FILES ./src/main.cpp
         ./src/TrafficSimulation.cpp
         ./src/VehicleGenerator.cpp
         ./src/Vehicle.cpp
-
+        ./src/Bushalte.cpp
 
 )
 
@@ -51,8 +51,7 @@ set(DEBUG_SOURCE_FILES ./src/main.cpp
         ./src/VehicleGenerator.cpp
         ./src/Vehicle.cpp
         src/Constants.h
-        src/Bushalte.cpp
-        src/Bushalte.h
+        ./src/Bushalte.cpp
 )
 
 # Create RELEASE target

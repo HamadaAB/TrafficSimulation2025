@@ -9,6 +9,7 @@ std::vector<Road> roads;
 std::vector<TrafficLight> trafficlights;
 std::vector<Vehicle> vehicles;
 std::vector<VehicleGenerator> vehicle_gens;
+std::vector<Bushalte> bushalten;
 
 
 
@@ -209,7 +210,7 @@ void LoadElement(TiXmlElement* element) {
             std::cerr << "INVALID GENERATOR NUMBER FORMAT" << std::endl;
         }
     }
-/*
+
     else if (elementType == "BUSHALTE") {
 
         TiXmlElement* roadElem = element->FirstChildElement("baan");
@@ -248,7 +249,7 @@ void LoadElement(TiXmlElement* element) {
             std::cerr << "INVALID TRAFFIC LIGHT NUMBER FORMAT" << std::endl;
         }
     }
-*/
+
 }
 
 //##################### CAR MOVEMENT ###################################
