@@ -10,6 +10,7 @@ std::vector<TrafficLight> trafficlights;
 std::vector<Vehicle> vehicles;
 std::vector<VehicleGenerator> vehicle_gens;
 std::vector<Bushalte> bushalten;
+std::vector<Kruispunt> kruispunten;
 
 
 
@@ -23,8 +24,8 @@ std::vector<Bushalte> bushalten;
 
 // is easier for loading file
 // if needed, can give a return value referring to error type. (ex. return 404; ==> unable to load)
-void loadDoc(std::string doc_name) {
-    TiXmlDocument doc("../Tests/invalid_element.xml");
+void loadDoc(const char* doc_name) {
+    TiXmlDocument doc(doc_name);
     if (!doc.LoadFile()) {
         // error message
         std::cerr << "ERROR: UNABLE TO LOAD FILE" << '\n';
@@ -212,7 +213,7 @@ void LoadElement(TiXmlElement* element) {
     }
 
     else if (elementType == "BUSHALTE") {
-
+        Bushalte newBushalte;
         TiXmlElement* roadElem = element->FirstChildElement("baan");
         TiXmlElement* posElem = element->FirstChildElement("positie");
         TiXmlElement* waitElem = element->FirstChildElement("wachttijd");
@@ -224,7 +225,6 @@ void LoadElement(TiXmlElement* element) {
         }
 
         try {
-            Bushalte newBushalte;
             newBushalte.set_road_name(roadElem->GetText());
             newBushalte.set_position(std::stoi(posElem->GetText()));
             newBushalte.set_wait_time(std::stoi(waitElem->GetText()));
@@ -239,14 +239,68 @@ void LoadElement(TiXmlElement* element) {
             }
 
             if (!roadExists) {
-                std::cerr << "TRAFFIC LIGHT ROAD NOT FOUND: " << newBushalte.get_road_name() << std::endl;
+                std::cerr << "BUSSTOP ROAD NOT FOUND: " << newBushalte.get_road_name() << std::endl;
                 return;
             }
 
             bushalten.push_back(newBushalte); // Add busstop to global list
         }
         catch (...) {
-            std::cerr << "INVALID TRAFFIC LIGHT NUMBER FORMAT" << std::endl;
+            std::cerr << "BUSSTOP LIGHT NUMBER FORMAT" << std::endl;
+        }
+    }
+
+    else if (elementType == "KRUISPUNT") {
+        Kruispunt newKruispunt;
+        TiXmlElement* road1Elem = element->FirstChildElement("baan");
+
+        // Check required elements exist
+        if (!road1Elem) {
+            std::cerr << "BAD BUSSTOP: Missing data" << std::endl;
+            return;
+        }
+
+        TiXmlElement* road2Elem = road1Elem->NextSiblingElement();
+        // Check required elements exist
+        if (!road2Elem) {
+            std::cerr << "BAD BUSSTOP: Missing data" << std::endl;
+            return;
+        }
+
+        try {
+            newKruispunt.set_road1_name(road1Elem->GetText());
+            newKruispunt.set_road2_name(road2Elem->GetText());
+            newKruispunt.set_position1(std::stoi(road1Elem->Attribute("positie")));
+            newKruispunt.set_position2(std::stoi(road2Elem->Attribute("positie")));
+
+            // Check if there is a road
+            bool roadExists = false;
+            bool road2Exists = false;
+            for (const Road& r : roads) {
+                if (r.get_name() == newKruispunt.get_road1_name()) {
+                    roadExists = true;
+                }
+                if (r.get_name() == newKruispunt.get_road2_name()) {
+                    road2Exists = true;
+                }
+                if (roadExists and road2Exists) {
+                    break;
+                }
+            }
+
+            if (!roadExists) {
+                std::cerr << "CROSSROAD ROAD NOT FOUND: " << newKruispunt.get_road1_name() << std::endl;
+                return;
+            }
+            if (!road2Exists) {
+                std::cerr << "CROSSROAD ROAD NOT FOUND: " << newKruispunt.get_road2_name() << std::endl;
+                return;
+            }
+
+            kruispunten.push_back(newKruispunt); // Add crossroad to global list
+        }
+        catch (...) {
+            std::cerr << "INVALID CROSSROAD NUMBER FORMAT" << std::endl;
         }
     }
 

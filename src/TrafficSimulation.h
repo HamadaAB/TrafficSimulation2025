@@ -17,8 +17,9 @@
 #include "Bushalte.h"
 #include "Constants.h"
 #include <cmath>
+#include "Kruispunt.h"
 
-void LoadDoc(std::string doc_name);
+void LoadDoc(const char* doc_name);
 void LoadElement(TiXmlElement* element); // Reads XML elements
 
 void PrintSituation(); // Shows current traffic status
