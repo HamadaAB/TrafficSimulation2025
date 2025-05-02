@@ -1,11 +1,5 @@
-
-
-
 #include "TrafficSimulation.h"
-#include "Constants.h"
-#include "TrafficLight.h"
-#include <cmath>
-#include <iostream>
+
 
 
 //===== Global Variables =====
@@ -25,8 +19,24 @@ std::vector<VehicleGenerator> vehicle_gens;
  * Reads XML elements to create roads, traffic lights, cars, and car factories
  * @param element - The XML element to process (like <BAAN>, <VERKEERSLICHT>, etc.)
  */
-// This is like reading the game instruction manual
 
+// is easier for loading file
+// if needed, can give a return value referring to error type. (ex. return 404; ==> unable to load)
+void loadDoc(std::string doc_name) {
+    TiXmlDocument doc("../Tests/invalid_element.xml");
+    if (!doc.LoadFile()) {
+        // error message
+        std::cerr << "ERROR: UNABLE TO LOAD FILE" << '\n';
+    }
+    TiXmlElement* root = doc.RootElement();
+    for (TiXmlElement* elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
+        LoadElement(elem);
+    }
+    // checks should be done here, after everything is loaded
+    // otherwise it may be that a car can't be placed before the road
+}
+
+// This is like reading the game instruction manual
 void LoadElement(TiXmlElement* element) {
     if (!element) {
         std::cout << "Empty element found - skipping" << std::endl;
@@ -34,7 +44,8 @@ void LoadElement(TiXmlElement* element) {
     }
 
     std::string elementType = element->Value();
-    std::cout << "Loading element: " << elementType << std::endl;
+    // debug only
+    // std::cout << "Loading element: " << elementType << std::endl;
 
     // Handle root simulation element
     if (elementType == "SIMULATION") {
@@ -123,9 +134,9 @@ void LoadElement(TiXmlElement* element) {
             std::cerr << "BAD VEHICLE: Missing data" << std::endl;
             return;
         }
+        // get the type of vehicle as a string
         std::string typ;
         if (!typElem) {
-            std::cerr << "NO VEHICLE TYPE" << std::endl;
             typ = "autowagen";
         } else {
             typ = typElem->GetText();
@@ -198,6 +209,46 @@ void LoadElement(TiXmlElement* element) {
             std::cerr << "INVALID GENERATOR NUMBER FORMAT" << std::endl;
         }
     }
+/*
+    else if (elementType == "BUSHALTE") {
+
+        TiXmlElement* roadElem = element->FirstChildElement("baan");
+        TiXmlElement* posElem = element->FirstChildElement("positie");
+        TiXmlElement* waitElem = element->FirstChildElement("wachttijd");
+
+        // Check required elements exist
+        if (!roadElem || !posElem || !waitElem) {
+            std::cerr << "BAD BUSSTOP: Missing data" << std::endl;
+            return;
+        }
+
+        try {
+            Bushalte newBushalte;
+            newBushalte.set_road_name(roadElem->GetText());
+            newBushalte.set_position(std::stoi(posElem->GetText()));
+            newBushalte.set_wait_time(std::stoi(waitElem->GetText()));
+
+            // Check if there is a road
+            bool roadExists = false;
+            for (const Road& r : roads) {
+                if (r.get_name() == newBushalte.get_road_name()) {
+                    roadExists = true;
+                    break;
+                }
+            }
+
+            if (!roadExists) {
+                std::cerr << "TRAFFIC LIGHT ROAD NOT FOUND: " << newBushalte.get_road_name() << std::endl;
+                return;
+            }
+
+            bushalten.push_back(newBushalte); // Add busstop to global list
+        }
+        catch (...) {
+            std::cerr << "INVALID TRAFFIC LIGHT NUMBER FORMAT" << std::endl;
+        }
+    }
+*/
 }
 
 //##################### CAR MOVEMENT ###################################
@@ -218,8 +269,9 @@ void UpdateVehicleMovement(double dt, double current_time) {
 
             light.change_light();
             light.set_last_change_time(current_time);
-            std::cout << "Light at " << light.get_position() << "m changed to "
-                      << (light.is_green() ? "GREEN" : "RED") << std::endl; // Debug
+
+            //std::cout << "Light at " << light.get_position() << "m changed to "
+            //          << (light.is_green() ? "GREEN" : "RED") << std::endl; // Debug
         }
     }
 
@@ -253,7 +305,8 @@ void UpdateVehicleMovement(double dt, double current_time) {
                     }
                     else if (distanceToLight <= Constants::DecelerationDistance) {
                         effectiveSpeed = Constants::SlowdownFactor * Constants::MaxAbsoluteSpeed;
-                        std::cout << "Car at " << vehicle.get_position() << "m slowing for light ahead" << std::endl;
+                        // debug
+                        // std::cout << "Car at " << vehicle.get_position() << "m slowing for light ahead" << std::endl;
                     }
                 }
             }
@@ -299,8 +352,9 @@ void UpdateVehicleMovement(double dt, double current_time) {
 
         // Remove vehicles that exit the road
         if (vehicle.get_position() >= currentRoad->get_length() - Constants::VehicleLength) {
-            std::cout << "Vehicle exited " << vehicle.get_road_name()
-                      << " at " << vehicle.get_position() << "m" << std::endl;
+            // debug
+            // std::cout << "Vehicle exited " << vehicle.get_road_name()
+            //          << " at " << vehicle.get_position() << "m" << std::endl;
             continue; // Skip adding to updatedVehicles
         }
         updatedVehicles.push_back(vehicle);
@@ -325,10 +379,11 @@ void GenerateVehicles(double current_time) {
         if ((current_time - factory.last_generated) < factory.frequency) continue;
 
         // Debug message
+        /*
         std::cout << "Generator check: "
                   << (current_time - factory.last_generated)
                   << "/" << factory.frequency << "s" << std::endl;
-
+        */
         // Find the target road
         Road* targetRoad = nullptr;
         for (Road& r : roads) {
@@ -349,7 +404,8 @@ void GenerateVehicles(double current_time) {
         for (const Vehicle& car : vehicles) {
             if (car.get_road_name() == factory.road && car.get_position() < checkDistance) {
                 spaceFree = false;
-                std::cout << "Road start occupied" << std::endl;
+                // Debug?
+                // std::cout << "Road start occupied" << std::endl;
                 break;
             }
         }
@@ -358,7 +414,8 @@ void GenerateVehicles(double current_time) {
         if (spaceFree) {
             vehicles.emplace_back(factory.road, 0.0, 10.0, Constants::MaxAcceleration);
             factory.last_generated = current_time;
-            std::cout << "New car spawned on " << factory.road << "!" << std::endl;
+            // debug
+            // std::cout << "New car spawned on " << factory.road << "!" << std::endl;
         }
     }
 }
@@ -396,7 +453,8 @@ double ComputeAcceleration(const Vehicle& car, double effective_vmax) {
 
         double speedDiff = car.get_speed() - frontCar->get_speed();
         if (gap < Constants::DecelerationDistance) {
-            std::cout << "Gap: " << gap<< ", SpeedDiff: " << speedDiff<< ", delta: " << delta << std::endl; // Debug
+            // Debug
+            // std::cout << "Gap: " << gap<< ", SpeedDiff: " << speedDiff<< ", delta: " << delta << std::endl; // Debug
             delta = (Constants::MinFollowingDistance +
                     std::max(0.0, (car.get_speed() * speedDiff) /
                     (2 * std::sqrt(Constants::MaxAcceleration * Constants::MaxDeceleration)))) / gap;

@@ -51,6 +51,8 @@ set(DEBUG_SOURCE_FILES ./src/main.cpp
         ./src/VehicleGenerator.cpp
         ./src/Vehicle.cpp
         src/Constants.h
+        src/Bushalte.cpp
+        src/Bushalte.h
 )
 
 # Create RELEASE target

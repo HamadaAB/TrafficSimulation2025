@@ -14,9 +14,11 @@
 #include "TrafficLight.h"
 #include "Vehicle.h"
 #include "VehicleGenerator.h"
+#include "Bushalte.h"
+#include "Constants.h"
+#include <cmath>
 
-
-
+void LoadDoc(std::string doc_name);
 void LoadElement(TiXmlElement* element); // Reads XML elements
 
 void PrintSituation(); // Shows current traffic status
@@ -35,5 +37,6 @@ extern std::vector<Road> roads;
 extern std::vector<TrafficLight> trafficlights;
 extern std::vector<Vehicle> vehicles;
 extern std::vector<VehicleGenerator> vehicle_gens;
+extern std::vector<Bushalte> bushalten;
 
 #endif //TRAFFICSIMULATION_H

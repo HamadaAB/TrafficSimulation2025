@@ -62,8 +62,8 @@ TEST_F(TrafficSimTest, VehicleMovement) {
   }
 
   // Debug: Print loaded vehicles and roads
-  std::cout << "Loaded roads: " << roads.size() << std::endl;
-  std::cout << "Loaded vehicles: " << vehicles.size() << std::endl;
+  // std::cout << "Loaded roads: " << roads.size() << std::endl;
+  // std::cout << "Loaded vehicles: " << vehicles.size() << std::endl;
 
 
   ASSERT_EQ(vehicles.size(), 1u) << "Expected 1 vehicle, got " << vehicles.size();
