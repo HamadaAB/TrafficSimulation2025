@@ -24,25 +24,35 @@ std::vector<Kruispunt> kruispunten;
 
 // is easier for loading file
 // if needed, can give a return value referring to error type. (ex. return 404; ==> unable to load)
-void loadDoc(const char* doc_name) {
-    TiXmlDocument doc(doc_name);
+int LoadDoc(const std::string& doc_name) {
+    TiXmlDocument doc(doc_name.c_str());
     if (!doc.LoadFile()) {
         // error message
-        std::cerr << "ERROR: UNABLE TO LOAD FILE" << '\n';
+        // std::cerr << "ERROR: UNABLE TO LOAD FILE" << '\n';
+        return 1;
     }
     TiXmlElement* root = doc.RootElement();
-    for (TiXmlElement* elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
-        LoadElement(elem);
+    std::string value_root = root->Value();
+    if (value_root == "SIMULATION") {
+        for (TiXmlElement *elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
+            int status = LoadElement(elem);
+            if (status != 0) {
+                return status;
+            }
+        }
     }
+    else { return LoadElement(root); }
+    return 0;
     // checks should be done here, after everything is loaded
     // otherwise it may be that a car can't be placed before the road
 }
 
 // This is like reading the game instruction manual
-void LoadElement(TiXmlElement* element) {
+int LoadElement(TiXmlElement* element) {
     if (!element) {
-        std::cout << "Empty element found - skipping" << std::endl;
-        return;
+        // debug
+        // std::cout << "Empty element found - skipping" << std::endl;
+        return 0;
     }
 
     std::string elementType = element->Value();
@@ -56,7 +66,7 @@ void LoadElement(TiXmlElement* element) {
              child = child->NextSiblingElement()) {
             LoadElement(child);
         }
-        return;
+        return 0;
     }
 
     // Load road information
@@ -67,8 +77,8 @@ void LoadElement(TiXmlElement* element) {
 
         // Check for required data
         if (!nameElem || !lengthElem) {
-            std::cerr << "BAD ROAD: Missing name or length" << std::endl;
-            return;
+            // std::cerr << "BAD ROAD: Missing name or length" << std::endl;
+            return 2;
         }
 
         try {
@@ -77,14 +87,14 @@ void LoadElement(TiXmlElement* element) {
 
             // the length of the rooad must be positive
             if (newRoad.get_length() <= 0) {
-                std::cerr << "BAD ROAD LENGTH: " << newRoad.get_length() << std::endl;
-                return;
+                // std::cerr << "BAD ROAD LENGTH: " << newRoad.get_length() << std::endl;
+                return 3;
             }
 
             roads.push_back(newRoad); // Add road to global list
         }
         catch (...) {
-            std::cerr << "INVALID ROAD NUMBER FORMAT" << std::endl;
+            // std::cerr << "INVALID ROAD NUMBER FORMAT" << std::endl;
         }
     }
     // Load traffic light
@@ -96,8 +106,8 @@ void LoadElement(TiXmlElement* element) {
 
         // Check required elements exist
         if (!roadElem || !posElem || !cycleElem) {
-            std::cerr << "BAD TRAFFIC LIGHT: Missing data" << std::endl;
-            return;
+            // std::cerr << "BAD TRAFFIC LIGHT: Missing data" << std::endl;
+            return 2;
         }
 
         try {
@@ -115,14 +125,14 @@ void LoadElement(TiXmlElement* element) {
             }
 
             if (!roadExists) {
-                std::cerr << "TRAFFIC LIGHT ROAD NOT FOUND: " << newLight.get_road_name() << std::endl;
-                return;
+                // std::cerr << "TRAFFIC LIGHT ROAD NOT FOUND: " << newLight.get_road_name() << std::endl;
+                return 4;
             }
 
             trafficlights.push_back(newLight); // Add light to global list
         }
         catch (...) {
-            std::cerr << "INVALID TRAFFIC LIGHT NUMBER FORMAT" << std::endl;
+            // std::cerr << "INVALID TRAFFIC LIGHT NUMBER FORMAT" << std::endl;
         }
     }
     // Load vehicle
@@ -133,10 +143,10 @@ void LoadElement(TiXmlElement* element) {
 
         // Check required elements exist
         if (!roadElem || !posElem) {
-            std::cerr << "BAD VEHICLE: Missing data" << std::endl;
-            return;
+            // std::cerr << "BAD VEHICLE: Missing data" << std::endl;
+            return 2;
         }
-        // get the type of vehicle as a string
+        // if exists: get the type of vehicle as a string
         std::string typ;
         if (!typElem) {
             typ = "autowagen";
@@ -158,17 +168,16 @@ void LoadElement(TiXmlElement* element) {
             }
 
             if (!roadExists) {
-                std::cerr << "VEHICLE ROAD NOT FOUND: " << roadName << std::endl;
-                return;
+                // std::cerr << "VEHICLE ROAD NOT FOUND: " << roadName << std::endl;
+                return 4;
             }
 
             vehicles.emplace_back(roadName, position, typ);
         }
         catch (...) {
-            std::cerr << "INVALID VEHICLE NUMBER FORMAT" << std::endl;
+            // std::cerr << "INVALID VEHICLE NUMBER FORMAT" << std::endl;
         }
     }
-
     //--- Load Car Factory ---
     else if (elementType == "VOERTUIGGENERATOR") {
         VehicleGenerator newGen;
@@ -177,8 +186,8 @@ void LoadElement(TiXmlElement* element) {
 
         // Check required elements exist
         if (!roadElem || !freqElem) {
-            std::cerr << "BAD GENERATOR: Missing data" << std::endl;
-            return;
+            // std::cerr << "BAD GENERATOR: Missing data" << std::endl;
+            return 2;
         }
 
         try {
@@ -187,8 +196,8 @@ void LoadElement(TiXmlElement* element) {
 
             // Check for positive frequency
             if (newGen.frequency <= 0) {
-                std::cerr << "BAD GENERATOR FREQUENCY: " << newGen.frequency << std::endl;
-                return;
+                // std::cerr << "BAD GENERATOR FREQUENCY: " << newGen.frequency << std::endl;
+                return 3;
             }
 
             // Check if road actually exists
@@ -201,17 +210,17 @@ void LoadElement(TiXmlElement* element) {
             }
 
             if (!roadExists) {
-                std::cerr << "GENERATOR ROAD NOT FOUND: " << newGen.road << std::endl;
-                return;
+                // std::cerr << "GENERATOR ROAD NOT FOUND: " << newGen.road << std::endl;
+                return 4;
             }
 
             vehicle_gens.push_back(newGen);
         }
         catch (...) {
-            std::cerr << "INVALID GENERATOR NUMBER FORMAT" << std::endl;
+            // std::cerr << "INVALID GENERATOR NUMBER FORMAT" << std::endl;
         }
     }
-
+    // load busstop information
     else if (elementType == "BUSHALTE") {
         Bushalte newBushalte;
         TiXmlElement* roadElem = element->FirstChildElement("baan");
@@ -220,8 +229,8 @@ void LoadElement(TiXmlElement* element) {
 
         // Check required elements exist
         if (!roadElem || !posElem || !waitElem) {
-            std::cerr << "BAD BUSSTOP: Missing data" << std::endl;
-            return;
+            // std::cerr << "BAD BUSSTOP: Missing data" << std::endl;
+            return 2;
         }
 
         try {
@@ -239,34 +248,33 @@ void LoadElement(TiXmlElement* element) {
             }
 
             if (!roadExists) {
-                std::cerr << "BUSSTOP ROAD NOT FOUND: " << newBushalte.get_road_name() << std::endl;
-                return;
+                // std::cerr << "BUSSTOP ROAD NOT FOUND: " << newBushalte.get_road_name() << std::endl;
+                return 4;
             }
 
             bushalten.push_back(newBushalte); // Add busstop to global list
         }
         catch (...) {
-            std::cerr << "BUSSTOP LIGHT NUMBER FORMAT" << std::endl;
+            // std::cerr << "BUSSTOP LIGHT NUMBER FORMAT" << std::endl;
         }
     }
-
+    // load busstop information
     else if (elementType == "KRUISPUNT") {
         Kruispunt newKruispunt;
         TiXmlElement* road1Elem = element->FirstChildElement("baan");
 
         // Check required elements exist
         if (!road1Elem) {
-            std::cerr << "BAD BUSSTOP: Missing data" << std::endl;
-            return;
+            // std::cerr << "BAD CROSSROAD: Missing data" << std::endl;
+            return 2;
         }
 
         TiXmlElement* road2Elem = road1Elem->NextSiblingElement();
         // Check required elements exist
         if (!road2Elem) {
-            std::cerr << "BAD BUSSTOP: Missing data" << std::endl;
-            return;
+            // std::cerr << "BAD CROSSROAD: Missing data" << std::endl;
+            return 2;
         }
-
         try {
             newKruispunt.set_road1_name(road1Elem->GetText());
             newKruispunt.set_road2_name(road2Elem->GetText());
@@ -289,21 +297,22 @@ void LoadElement(TiXmlElement* element) {
             }
 
             if (!roadExists) {
-                std::cerr << "CROSSROAD ROAD NOT FOUND: " << newKruispunt.get_road1_name() << std::endl;
-                return;
+                // std::cerr << "CROSSROAD ROAD NOT FOUND: " << newKruispunt.get_road1_name() << std::endl;
+                return 4;
             }
             if (!road2Exists) {
-                std::cerr << "CROSSROAD ROAD NOT FOUND: " << newKruispunt.get_road2_name() << std::endl;
-                return;
+                // std::cerr << "CROSSROAD ROAD NOT FOUND: " << newKruispunt.get_road2_name() << std::endl;
+                return 4;
             }
 
             kruispunten.push_back(newKruispunt); // Add crossroad to global list
         }
         catch (...) {
-            std::cerr << "INVALID CROSSROAD NUMBER FORMAT" << std::endl;
+            // std::cerr << "INVALID CROSSROAD NUMBER FORMAT" << std::endl;
         }
     }
-
+    else { return 5; }
+    return 0;
 }
 
 //##################### CAR MOVEMENT ###################################
@@ -316,19 +325,6 @@ void LoadElement(TiXmlElement* element) {
 
 void UpdateVehicleMovement(double dt, double current_time) {
     std::vector<Vehicle> updatedVehicles;
-
-    // Update traffic lights first
-    for (TrafficLight& light : trafficlights) {
-        double cycleSeconds = light.get_cyclus() * Constants::SimulationTimeStep;
-        if (current_time - light.get_last_change_time() >= cycleSeconds) {
-
-            light.change_light();
-            light.set_last_change_time(current_time);
-
-            //std::cout << "Light at " << light.get_position() << "m changed to "
-            //          << (light.is_green() ? "GREEN" : "RED") << std::endl; // Debug
-        }
-    }
 
     // Update each vehicle
     for (Vehicle& vehicle : vehicles) {
@@ -374,8 +370,6 @@ void UpdateVehicleMovement(double dt, double current_time) {
         // Update position and speed
         if (shouldStop) {
 
-
-
             vehicle.set_acceleration(-Constants::MaxDeceleration);
 
             if (vehicle.get_speed() + vehicle.get_acceleration() * dt < 0) {
@@ -415,9 +409,31 @@ void UpdateVehicleMovement(double dt, double current_time) {
         updatedVehicles.push_back(vehicle);
     }
 
+    // Update traffic lights first
+
     vehicles = updatedVehicles;
 }
 
+// goes over all and updates them every time step
+int update_cycle() {
+    double time = 0;
+    bool cycle_on = true;
+    while (cycle_on) {
+        double new_time = time + 1;
+
+        // update all
+        UpdateVehicleMovement(1, new_time);
+
+        UpdateTrafficLights(new_time);
+
+        GenerateVehicles(new_time);
+
+        time = new_time;
+        if (vehicles.empty()) { cycle_on = false; }
+    }
+
+    return 0;
+}
 
 //===== CAR SPAWNER =====
 

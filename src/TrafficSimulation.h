@@ -19,8 +19,8 @@
 #include <cmath>
 #include "Kruispunt.h"
 
-void LoadDoc(const char* doc_name);
-void LoadElement(TiXmlElement* element); // Reads XML elements
+int LoadDoc(const std::string& doc_name);
+int LoadElement(TiXmlElement* element); // Reads XML elements
 
 void PrintSituation(); // Shows current traffic status
 // split for less duplicate code, used in debug function
@@ -32,6 +32,8 @@ double ComputeAcceleration(const Vehicle& vehicle, double effective_vmax); // Ca
 void UpdateTrafficLights(double current_time);
 void GenerateVehicles(double current_time);
 
+int update_cycle();
+
 
 
 extern std::vector<Road> roads;
@@ -39,5 +41,6 @@ extern std::vector<TrafficLight> trafficlights;
 extern std::vector<Vehicle> vehicles;
 extern std::vector<VehicleGenerator> vehicle_gens;
 extern std::vector<Bushalte> bushalten;
+extern std::vector<Kruispunt> kruispunten;
 
 #endif //TRAFFICSIMULATION_H

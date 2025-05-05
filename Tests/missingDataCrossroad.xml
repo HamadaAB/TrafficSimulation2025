@@ -1,0 +1,13 @@
+<SIMULATION>
+    <BAAN>
+        <naam>baan1</naam>
+        <lengte>200</lengte>
+    </BAAN>
+    <BAAN>
+        <naam>baan2</naam>
+        <lengte>300</lengte>
+    </BAAN>
+    <KRUISPUNT>
+        <baan positie="50">baan1</baan>
+    </KRUISPUNT>
+</SIMULATION>

@@ -27,7 +27,8 @@ TEST_F(TrafficSimTest, InvalidElement) {
   for (TiXmlElement* elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
     LoadElement(elem);
   }
-  EXPECT_TRUE(roads.empty()); // Invalid element should not load
+  EXPECT_TRUE(roads.empty() && vehicles.empty() && vehicle_gens.empty() && trafficlights.empty()
+              && bushalten.empty() && kruispunten.empty()); // Invalid element should not load
 }
 
 // Test 2: Missing required attribute
@@ -35,10 +36,8 @@ TEST_F(TrafficSimTest, MissingAttribute) {
   TiXmlDocument doc("../Tests/missing_attribute.xml");
   ASSERT_TRUE(doc.LoadFile());
   TiXmlElement* root = doc.RootElement();
-  for (TiXmlElement* elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
-    LoadElement(elem);
-  }
-  EXPECT_TRUE(roads.empty()); // Road without name should be rejected
+  int result = LoadElement(root);
+  EXPECT_TRUE(result == 2); // Road without name should be rejected
 }
 
 // Test 3: Inconsistent traffic situation (vehicle on non-existent road)
@@ -46,10 +45,9 @@ TEST_F(TrafficSimTest, InconsistentRoad) {
   TiXmlDocument doc("../Tests/inconsistent_road.xml");
   ASSERT_TRUE(doc.LoadFile()) << "Failed to load XML: " << doc.ErrorDesc();
   TiXmlElement* root = doc.RootElement();
-  for (TiXmlElement* elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
-    LoadElement(elem);
-  }
-  EXPECT_TRUE(vehicles.empty()); // Vehicle on invalid road should be ignored
+  int result = 0;
+  result = LoadElement(root);
+  EXPECT_TRUE(result == 4); // Vehicle on invalid road should be ignored
 }
 
 // Test 4: Vehicle movement
@@ -203,6 +201,36 @@ TEST_F(TrafficSimTest, MultipleGenerators) {
   EXPECT_EQ(vehicles.size(), 2u);
 }
 
+TEST_F(TrafficSimTest, missingDataBusstop) {
+    TiXmlDocument doc("../Tests/missingDataBusstop.xml");
+    ASSERT_TRUE(doc.LoadFile()) << "Failed to load XML: " << doc.ErrorDesc();
+    TiXmlElement* root = doc.RootElement();
+    int result;
+    result = LoadElement(root);
+    EXPECT_TRUE(result == 2);
+}
+
+TEST_F(TrafficSimTest, missingDataCrossroad) {
+    TiXmlDocument doc("../Tests/missingDataCrossroad.xml");
+    ASSERT_TRUE(doc.LoadFile()) << "Failed to load XML: " << doc.ErrorDesc();
+    TiXmlElement* root = doc.RootElement();
+    int result = 0;
+    for (TiXmlElement* elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
+        result = LoadElement(elem);
+    }
+    EXPECT_TRUE(result == 2);
+}
+
+TEST_F(TrafficSimTest, UpdateCycle) {
+    TiXmlDocument doc("../Tests/UpdateCycle.xml");
+    ASSERT_TRUE(doc.LoadFile());
+    TiXmlElement* root = doc.RootElement();
+    for (TiXmlElement* elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
+        LoadElement(elem);
+    }
+    update_cycle();
+    EXPECT_TRUE(vehicles.empty());
+}
 
 // Add this test case to your main.cpp
 TEST_F(TrafficSimTest, FullSimulationTest) {

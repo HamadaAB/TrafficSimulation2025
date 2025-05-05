@@ -29,6 +29,6 @@ public:
     void change_light();
 
     // Constructor to initialize the light
-    TrafficLight() : is_light_green(true), last_change_time(0.0) {}
+    TrafficLight();
 };
 #endif //TRAFFICLIGHT_H

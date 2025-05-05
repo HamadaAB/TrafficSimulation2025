@@ -1,0 +1,5 @@
+0	: means everything is fine		
+1	: failed to load xml file		
+2	: missing data in xml file		
+3	: bad data in xml file			negative while must be pos
+4	: road not found			

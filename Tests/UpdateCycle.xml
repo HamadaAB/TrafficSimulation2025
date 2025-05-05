@@ -1,0 +1,40 @@
+<SIMULATION>
+    <!-- Main test road -->
+    <BAAN>
+        <naam>Highway</naam>
+        <lengte>1000</lengte>
+    </BAAN>
+    <BAAN>
+        <naam>road</naam>
+        <lengte>500</lengte>
+    </BAAN>
+
+    <!-- Initial vehicles -->
+    <VOERTUIG>
+        <baan>Highway</baan>
+        <positie>900</positie> <!-- Will exit quickly -->
+    </VOERTUIG>
+    <VOERTUIG>
+        <baan>Highway</baan>
+        <positie>300</positie>
+    </VOERTUIG>
+    <VOERTUIG>
+        <baan>Highway</baan>
+        <positie>0</positie>
+    </VOERTUIG>
+    <VOERTUIG>
+        <baan>road</baan>
+        <positie>300</positie>
+    </VOERTUIG>
+    <VOERTUIG>
+        <baan>road</baan>
+        <positie>100</positie>
+    </VOERTUIG>
+
+    <!-- Traffic lights -->
+    <VERKEERSLICHT>
+        <baan>Highway</baan>
+        <positie>500</positie>
+        <cyclus>30</cyclus> <!-- Changes every ~0.5 seconds -->
+    </VERKEERSLICHT>
+</SIMULATION>

@@ -1,5 +1,10 @@
 #include "TrafficLight.h"
 
+TrafficLight::TrafficLight() {
+    last_change_time = 0;
+    is_light_green = true;
+    cyclus = 5;
+}
 
  std::string TrafficLight::get_road_name() const{return road_name;}
  int TrafficLight::get_position() const{return position;}

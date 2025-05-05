@@ -14,7 +14,7 @@ public:
     double last_generated;  // When we last made a car
 
     // Constructor sets up default values
-    VehicleGenerator() : last_generated(0.0) {}
+    VehicleGenerator();
 };
 
 

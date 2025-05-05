@@ -14,7 +14,10 @@ Made by: **Hamada Abuarab**, **Mohammed Al-Attabi** and **Alexander Matheï**
 | -------- | --------------------------------- | --------- |--------|
 | ***1:*** | ***Input***                       |           |        |
 | 1.1      | Read traffic situation            | Required  | C      |
-| 1.2      | Read vehicle generators           | Important | X      |
+| 1.2      | Read vehicle generators           | Important | c      |
+| 1.3      | Vehicle with type                 | required  | c      |
+| 1.4      | Read busstop                      | important | c      |
+| 1.5      | Read crossroad                    | important | c      |
 | ***2:*** | ***Output***                      |           |        |
 | 2.1      | Simple output                     | Required  | C      |
 | ***3:*** | ***Simulation***                  |           |        |
@@ -22,6 +25,7 @@ Made by: **Hamada Abuarab**, **Mohammed Al-Attabi** and **Alexander Matheï**
 | 3.2      | Simulation of traffic light       | Required  | C      |
 | 3.3      | Automatic Simulation              | Required  | C      |
 | 3.4      | Simulation with vehicle generator | Important | C      |
+| 3.5      | Drive with type                   | required  | x      |
 
 ---
 
