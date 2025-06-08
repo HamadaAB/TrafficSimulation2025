@@ -18,29 +18,34 @@
 #include "Constants.h"
 #include <cmath>
 #include "Kruispunt.h"
+class TrafficSimulation {
+private:
+    std::vector<Road> roads;
+    std::vector<TrafficLight> trafficlights;
+    std::vector<Vehicle> vehicles;
+    std::vector<VehicleGenerator> vehicle_gens;
+    std::vector<Bushalte> bushalten;
+    std::vector<Kruispunt> kruispunten;
 
-int LoadDoc(const std::string& doc_name);
-int LoadElement(TiXmlElement* element); // Reads XML elements
+public:
+    explicit TrafficSimulation(const std::string& doc_name);
+    int LoadElement(TiXmlElement* element); // Reads XML elements
 
-void PrintSituation(); // Shows current traffic status
+    void PrintSituation(); // Shows current traffic status
 // split for less duplicate code, used in debug function
-void PrintVehicleInf(const Vehicle& vehicle); // Shows car details
 
-void UpdateVehicleMovement(double dt, double current_time);// Moves cars
-double ComputeAcceleration(const Vehicle& vehicle, double effective_vmax); // Calculates car acceleration
+    void UpdateVehicleMovement(double dt, double current_time);// Moves cars
+    double ComputeAcceleration(const Vehicle& vehicle, double effective_vmax); // Calculates car acceleration
 
-void UpdateTrafficLights(double current_time);
-void GenerateVehicles(double current_time);
+    void UpdateTrafficLights(double current_time);
+    void GenerateVehicles(double current_time);
 
-int update_cycle();
+    int update_cycle();
+
+};
 
 
 
-extern std::vector<Road> roads;
-extern std::vector<TrafficLight> trafficlights;
-extern std::vector<Vehicle> vehicles;
-extern std::vector<VehicleGenerator> vehicle_gens;
-extern std::vector<Bushalte> bushalten;
-extern std::vector<Kruispunt> kruispunten;
+
 
 #endif //TRAFFICSIMULATION_H

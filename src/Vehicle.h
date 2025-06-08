@@ -5,6 +5,7 @@
 
 #include "string"
 #include "Constants.h"
+#include "iostream"
 
 // auto is een keyword en dus is het makkelijker om een andere naam te kiezen
 enum Type {autowagen, bus, brandweerwagen, ziekenwagen, politiecombi};
@@ -42,6 +43,8 @@ public:
 
     void add_speed(double spd);
     void move_position(double pos);
+
+    void print();
 };
 
 Type string_to_car_type(const std::string& typ);

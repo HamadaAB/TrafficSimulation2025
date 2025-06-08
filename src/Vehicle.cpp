@@ -28,6 +28,12 @@ void Vehicle::set_length(double len) { length = len; }
 void Vehicle::add_speed(double spd) {speed += spd;}
 void Vehicle::move_position(double pos) {position += pos;}
 
+void Vehicle::print() {
+    std::cout << "  Road: " << road_name << "\n";
+    std::cout << "  Position: " << position << " m\n";
+    std::cout << "  Speed: " << speed << " m/s\n";
+}
+
 // converts string to the types of a car; autowagen, bus,...
 Type string_to_car_type(const std::string& typ) {
     if(typ == "auto") { return autowagen; }
