@@ -19,9 +19,9 @@ TrafficSimulation::TrafficSimulation(const std::string &doc_name) {
     std::string value_root = root->Value();
     if (value_root == "SIMULATION") {
         for (TiXmlElement *elem = root->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
-            int status = LoadElement(elem);
-            if (status != 0) {
-                // return status;
+            LoadElement(elem);
+            if (!error_reason.empty()) {
+                return;
             }
         }
 
@@ -55,26 +55,26 @@ int TrafficSimulation::LoadElement(TiXmlElement* element) {
         // Check for required data
         if (!nameElem or !lengthElem) {
             // std::cerr << "BAD ROAD: Missing name or length" << std::endl;
-            // error message !!!
+            error_reason += "MISSING_ELEM_BAAN";
             return 2;
         }
 
         try {
-            newRoad.set_name(nameElem->GetText());
-            newRoad.set_length(std::stoi(lengthElem->GetText()));
+            int length = std::stoi(lengthElem->GetText());
 
             // the length of the rooad must be positive
-            if (newRoad.get_length() <= 0) {
+            if (length <= 0) {
                 // std::cerr << "BAD ROAD LENGTH: " << newRoad.get_length() << std::endl;
-                // error message !!!
+                error_reason += "BAD_LENGTH_BAAN";
                 return 3;
             }
+            newRoad.set_name(nameElem->GetText());
+            newRoad.set_length(length);
 
             roads.push_back(newRoad); // Add road to global list
         }
         catch (...) {
-            // std::cerr << "INVALID ROAD NUMBER FORMAT" << std::endl;
-            // error message !!!
+            error_reason += "INVALID_BAAN_FORMAT";
         }
     }
     // Load traffic light
@@ -153,7 +153,6 @@ int TrafficSimulation::LoadElement(TiXmlElement* element) {
             } else {
                 vehicles.emplace_back(new_car);
                 road->add_car(&vehicles.back());
-                std::cout << road->get_cars()[road->get_cars().size()-1]->get_position() << std::endl;
             }
 
 
@@ -320,11 +319,10 @@ void TrafficSimulation::UpdateVehicleMovement(double dt, double current_time) {
     REQUIRE(current_time >= 0, "time can't be negative");
     REQUIRE(dt > 0, "time steps can't be negative or zero");
     // Update each vehicle
-    for (Vehicle& car : vehicles) {
-        car.update(dt, current_time);
-        std::cout << car.get_position() << std::endl;
+    sort_roads();
+    for (Vehicle* car : ordered_vehicles) {
+        car->update(dt, current_time);
     }
-    std::cout << std::endl;
     for (Road& road : roads) {
         road.remove_offroad_cars();
     }
@@ -333,13 +331,13 @@ void TrafficSimulation::UpdateVehicleMovement(double dt, double current_time) {
 }
 
 void TrafficSimulation::remove_offroad_cars() {
-    std::vector<Vehicle> on_road;
-    for (unsigned int i = 0; i<vehicles.size();) {
-        if (vehicles[i].get_road() == nullptr) {
-            vehicles.erase(vehicles.begin() + int(i));
+    std::list<Vehicle>::iterator it = vehicles.begin();
+    while (it != vehicles.end()) {
+        if (it->get_road() == nullptr) {
+            it = vehicles.erase(it); // erase returns the next valid iterator
+        } else {
+            ++it;
         }
-        else {
-            i++; }
     }
 }
 
@@ -354,17 +352,12 @@ int TrafficSimulation::update_cycle(int repeatx) {
         // update all
         UpdateTrafficLights(new_time);
 
-        UpdateVehicleMovement(1, new_time);
+        UpdateVehicleMovement(10, new_time);
 
         GenerateVehicles(new_time);
 
         time = new_time;
-        if (int(time)%10 == 0) {
-            for (Road& road : roads) {
-                std::cout << road.get_cars().size() << std::endl;
-            }
-            std::cout << std::endl;
-        }
+
         if (vehicles.empty() or time == repeatx) { cycle_on = false; }
     }
 
@@ -470,12 +463,13 @@ void TrafficSimulation::UpdateTrafficLights(double current_time) {
 }
 
 
-std::vector<Road> TrafficSimulation::get_roads() { return roads; }
-std::vector<TrafficLight> TrafficSimulation::get_lights() { return trafficlights; }
-std::vector<Vehicle> TrafficSimulation::get_vehicles() { return vehicles; }
+std::list<Road> TrafficSimulation::get_roads() { return roads; }
+std::list<TrafficLight> TrafficSimulation::get_lights() { return trafficlights; }
+std::list<Vehicle> TrafficSimulation::get_vehicles() { return vehicles; }
 std::vector<VehicleGenerator> TrafficSimulation::get_generators() { return vehicle_gens; }
 std::vector<Bushalte> TrafficSimulation::get_busstops() { return bushalten; }
 std::vector<Kruispunt> TrafficSimulation::get_crossroads() { return kruispunten; }
+std::string TrafficSimulation::get_error_reason() { return error_reason; }
 
 Road* TrafficSimulation::get_road(const std::string& name) {
     REQUIRE(!name.empty(), "road name can't be empty");
@@ -488,51 +482,63 @@ Road* TrafficSimulation::get_road(const std::string& name) {
 }
 
 void TrafficSimulation::connect_to_road() {
-    for (unsigned int i = 0; i<vehicles.size();) {
-        if (vehicles[i].get_road() == nullptr) {
-            vehicles[i].set_road(get_road(vehicles[i].get_temp_name()));
-            vehicles[i].set_temp_name("");
-            if (vehicles[i].get_road() == nullptr) {
-                vehicles.erase(vehicles.begin() + int(i));
+    std::list<Vehicle>::iterator vit = vehicles.begin();
+    while (vit != vehicles.end()) {
+        if (vit->get_road() == nullptr) {
+            vit->set_road(get_road(vit->get_temp_name()));
+            vit->set_temp_name("");
+
+            if (vit->get_road() == nullptr) {
+                vit = vehicles.erase(vit);
             } else {
-                Road* road = vehicles[i].get_road();
-                vehicles[i].get_road()->add_car(&vehicles[i]);
-                std::cout << road->get_cars()[road->get_cars().size()-1]->get_position() << std::endl;
-                i++;
+                Road* road = vit->get_road();
+                road->add_car(&(*vit));
+                ++vit;
             }
-        } else { i++; }
+        } else {
+            ++vit;
+        }
     }
 
-    for (unsigned int i = 0; i<trafficlights.size();) {
-        if (trafficlights[i].get_road() == nullptr) {
-            trafficlights[i].set_road(get_road(trafficlights[i].get_temp_name()));
-            trafficlights[i].set_temp_name("");
-            if (vehicles[i].get_road() == nullptr) {
-                vehicles.erase(vehicles.begin() + int(i));
+// Process traffic lights
+    std::list<TrafficLight>::iterator lit = trafficlights.begin();
+    while (lit != trafficlights.end()) {
+        if (lit->get_road() == nullptr) {
+            lit->set_road(get_road(lit->get_temp_name()));
+            lit->set_temp_name("");
+
+            if (lit->get_road() == nullptr) {
+                lit = trafficlights.erase(lit);
             } else {
-                trafficlights[i].get_road()->add_light(&trafficlights[i]);
-                i++;
+                lit->get_road()->add_light(&(*lit));
+                ++lit;
             }
-        } else { i++; }
+        } else {
+            ++lit;
+        }
     }
 
     for (unsigned int i = 0; i<vehicle_gens.size();) {
         if (vehicle_gens[i].get_road() == nullptr) {
             vehicle_gens[i].set_road(get_road(vehicle_gens[i].get_temp_name()));
             vehicle_gens[i].set_temp_name("");
-            if (vehicles[i].get_road() == nullptr) {
-                vehicles.erase(vehicles.begin() + int(i));
+            if (vehicle_gens[i].get_road() == nullptr) {
+                vehicle_gens.erase(vehicle_gens.begin() + int(i));
             } else { i++; }
         } else { i++; }
     }
 }
 
-bool sort_cars(Vehicle& car1, Vehicle& car2) {
-    return car1.get_position() < car2.get_position();
+bool sort_cars(Vehicle* car1, Vehicle* car2) {
+    return car1->get_position() < car2->get_position();
 }
 
-void TrafficSimulation::sort_roads() {
-    std::sort(vehicles.begin(), vehicles.end(), sort_cars);
+void  TrafficSimulation::sort_roads() {
+    ordered_vehicles.clear();
+    for (Vehicle& car : vehicles) {
+        ordered_vehicles.emplace_back(&car);
+    }
+    std::sort(ordered_vehicles.begin(), ordered_vehicles.end(), sort_cars);
     for (Road& road : roads) {
         road.sort_all();
     }

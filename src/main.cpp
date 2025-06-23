@@ -44,15 +44,15 @@ TEST_F(TrafficSimTest, VehicleMovement) {
     // std::cout << "Loaded roads: " << roads.size() << std::endl;
     // std::cout << "Loaded vehicles: " << vehicles.size() << std::endl;
 
-    std::vector<Vehicle> vehicles = sim.get_vehicles();
+    std::list<Vehicle> vehicles = sim.get_vehicles();
     ASSERT_EQ(vehicles.size(), 1u) << "Expected 1 vehicle, got " << vehicles.size();
-    Vehicle car = vehicles[0];
+    Vehicle car = vehicles.front();
     double initialPos = car.get_position();
 
     sim.UpdateVehicleMovement(Constants::SimulationTimeStep, 0.0);
 
     vehicles = sim.get_vehicles();
-    car = vehicles[0];
+    car = vehicles.front();
 
     EXPECT_GT(car.get_position(), initialPos); // Vehicle should move forward
 }
@@ -61,15 +61,15 @@ TEST_F(TrafficSimTest, VehicleMovement) {
 TEST_F(TrafficSimTest, TrafficLightCycle) {
     TrafficSimulation sim("../Tests/traffic_light_cycle.xml");
 
-    std::vector<TrafficLight> trafficlights = sim.get_lights();
+    std::list<TrafficLight> trafficlights = sim.get_lights();
     // Check if traffic lights were loaded
     ASSERT_FALSE(trafficlights.empty()) << "No traffic lights found!";
-    TrafficLight& light = trafficlights[0];
+    TrafficLight& light = trafficlights.front();
 
     bool initialColor = light.is_green();
     sim.UpdateTrafficLights(light.get_cyclus() * Constants::SimulationTimeStep + 0.1); // Force cycle
 
-    light = sim.get_lights()[0];
+    light = sim.get_lights().front();
 
     EXPECT_NE(light.is_green(), initialColor); // Light should change color
 
@@ -86,10 +86,10 @@ TEST_F(TrafficSimTest, VehicleGeneration) {
 TEST_F(TrafficSimTest, VehicleFollowing) {
     TrafficSimulation sim("../Tests/vehicle_following.xml");
 
-    std::vector<Vehicle> vehicles = sim.get_vehicles();
+    std::list<Vehicle> vehicles = sim.get_vehicles();
     ASSERT_EQ(vehicles.size(), 2u);
-    Vehicle& frontCar = vehicles[0]; // Position 50
-    Vehicle& rearCar = vehicles[1];    // Position 10
+    Vehicle& frontCar = vehicles.front(); // Position 50
+    Vehicle& rearCar = vehicles.back();    // Position 10
 
     EXPECT_GT(frontCar.get_position(), rearCar.get_position());
 
@@ -120,7 +120,7 @@ TEST_F(TrafficSimTest, MultipleTrafficLights) {
 TEST_F(TrafficSimTest, VehicleExitsRoad) {
     TrafficSimulation sim("../Tests/vehicle_exit.xml");
 
-    std::vector<Vehicle> vehicles = sim.get_vehicles();
+    std::list<Vehicle> vehicles = sim.get_vehicles();
     ASSERT_EQ(vehicles.size(), 1u);
     sim.UpdateVehicleMovement(Constants::SimulationTimeStep, 0.0);
 
@@ -149,10 +149,10 @@ TEST_F(TrafficSimTest, GeneratorSpacing) {
 TEST_F(TrafficSimTest, StopDistance) {
     TrafficSimulation sim("../Tests/stop_distance.xml");
 
-    std::vector<TrafficLight> trafficlights = sim.get_lights();
+    std::list<TrafficLight> trafficlights = sim.get_lights();
     // Force light to stay RED
     ASSERT_FALSE(trafficlights.empty());
-    TrafficLight& light = trafficlights[0];
+    TrafficLight& light = trafficlights.front();
     light.set_light(false);
     light.set_cyclus(1000000000); // Match XML value
     light.set_last_change_time(0.0); // Reset timer
@@ -162,10 +162,10 @@ TEST_F(TrafficSimTest, StopDistance) {
         sim.UpdateVehicleMovement(Constants::SimulationTimeStep, i * Constants::SimulationTimeStep);
     }
 
-    std::vector<Vehicle> vehicles = sim.get_vehicles();
+    std::list<Vehicle> vehicles = sim.get_vehicles();
     // Verify vehicle stopped before the light
-    EXPECT_NEAR(vehicles[0].get_speed(), 0.0, 0.1);
-    EXPECT_LT(vehicles[0].get_position(), 145 - Constants::VehicleLength);
+    EXPECT_NEAR(vehicles.front().get_speed(), 0.0, 0.1);
+    EXPECT_LT(vehicles.front().get_position(), 145 - Constants::VehicleLength);
 
 }
 

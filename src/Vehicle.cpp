@@ -3,6 +3,8 @@
 
 // normal constructor
 Vehicle::Vehicle(Road*  road_ptr, double pos, double spd, double acc) {
+    REQUIRE(pos >= 0, "position must be positive");
+    REQUIRE(spd >= 0, "speed shouldn't be negative");
     road = road_ptr;
     position = pos;
     speed = spd;
@@ -17,18 +19,36 @@ Vehicle::Vehicle(Road* road_ptr, double pos, std::string& typ, double spd, doubl
 Road* Vehicle::get_road() const { return road; }
 std::string Vehicle::get_temp_name() const { return temp_road_name; }
 std::string Vehicle::get_road_name() const { return road->get_name(); }
-double Vehicle::get_position() const { return position; }
-double Vehicle::get_speed() const { return speed; }
+double Vehicle::get_position() const {
+    ENSURE(position >= 0, "position can't be negative");
+    return position;
+}
+double Vehicle::get_speed() const {
+    ENSURE(speed >= 0, "speed can't be negative");
+    return speed;
+}
 double Vehicle::get_acceleration() const { return acceleration; }
-double Vehicle::get_length() const { return length; }
+double Vehicle::get_length() const {
+    ENSURE(length >= 0, "length can't be negative");
+    return length;
+}
 
 // Setters
 void Vehicle::set_temp_name(const std::string& name) { temp_road_name = name; }
-void Vehicle::set_road(Road* road_ptr) { road = road_ptr; }
-void Vehicle::set_position(double pos) { position = pos; }
-void Vehicle::set_speed(double spd) { speed = spd; }
+void Vehicle::set_road(Road* road_ptr) {
+    road = road_ptr; }
+void Vehicle::set_position(double pos) {
+    REQUIRE(pos >= 0, "position can't be negative");
+    position = pos;
+}
+void Vehicle::set_speed(double spd) {
+    REQUIRE(spd >= 0, "speed can't be negative");
+    speed = spd;}
 void Vehicle::set_acceleration(double acc) { acceleration = acc; }
-void Vehicle::set_length(double len) { length = len; }
+void Vehicle::set_length(double len) {
+    REQUIRE(len >= 0, "length can't be negative");
+    length = len;
+}
 void Vehicle::set_offroad() { offroad = true; }
 
 void Vehicle::add_speed(double spd) {speed += spd;}
@@ -76,8 +96,8 @@ void Vehicle::ComputeAcceleration(double effective_vmax) {
 }
 
 void Vehicle::update(double dt, double current_time) {
-    // Find the road the vehicle is on
-    // Road* currentRoad = nullptr;
+    REQUIRE(dt > 0, "time pass can't be negative or zero");
+    REQUIRE(current_time >= 0, "current time can't be negative");
 
     // Traffic light logic
     bool shouldStop = false;
@@ -132,7 +152,6 @@ void Vehicle::update(double dt, double current_time) {
             move_position(speed * dt + 0.5 * acceleration * dt * dt);
         }
     }
-
 }
 
 
