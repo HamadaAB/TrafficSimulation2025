@@ -3,8 +3,6 @@
 #ifndef TRAFFICSIMULATION_H
 #define TRAFFICSIMULATION_H
 
-// This is like the table of contents for our traffic simulation.
-// It lists all the main functions we'll use to make cars go vroom!
 
 #include "tinyxml/tinyxml.h"
 #include "vector"
@@ -18,8 +16,10 @@
 #include "Constants.h"
 #include <cmath>
 #include "Kruispunt.h"
+
 class TrafficSimulation {
 private:
+    // lists ?
     std::vector<Road> roads;
     std::vector<TrafficLight> trafficlights;
     std::vector<Vehicle> vehicles;
@@ -29,18 +29,29 @@ private:
 
 public:
     explicit TrafficSimulation(const std::string& doc_name);
-    int LoadElement(TiXmlElement* element); // Reads XML elements
+    int LoadElement(TiXmlElement* element);
 
-    void PrintSituation(); // Shows current traffic status
-// split for less duplicate code, used in debug function
+    std::vector<Road> get_roads();
+    Road* get_road(const std::string& name);
+    std::vector<TrafficLight> get_lights();
+    std::vector<Vehicle> get_vehicles();
+    std::vector<VehicleGenerator> get_generators();
+    std::vector<Bushalte> get_busstops();
+    std::vector<Kruispunt> get_crossroads();
 
-    void UpdateVehicleMovement(double dt, double current_time);// Moves cars
-    double ComputeAcceleration(const Vehicle& vehicle, double effective_vmax); // Calculates car acceleration
+
+    void PrintSituation();
+
+    void UpdateVehicleMovement(double dt, double current_time);
+    void remove_offroad_cars();
+    void sort_roads();
 
     void UpdateTrafficLights(double current_time);
     void GenerateVehicles(double current_time);
 
-    int update_cycle();
+    int update_cycle(int repeatx=-1);
+
+    void connect_to_road();
 
 };
 

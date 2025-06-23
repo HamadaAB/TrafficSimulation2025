@@ -5,7 +5,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CMAKE_CXX_STANDARD 17)
 # Remove the "-O2" flag if you have problems with the debugger.
-set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -Werror -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -O0 -g")
 set(CMAKE_EXE_LINKER_FLAGS -pthread)
 
 # Set include dir
@@ -54,6 +54,7 @@ set(DEBUG_SOURCE_FILES ./src/main.cpp
         src/Constants.h
         ./src/Bushalte.cpp
         src/Kruispunt.cpp
+        gtest/include/DesignByContract.h
 )
 
 # Create RELEASE target

@@ -2,15 +2,6 @@
 
 
 
-//===== Global Variables =====
-// These are like the game memory they remember all roads, cars, etc
-// All roads, traffic lights, cars, and car factories in the simulation
-
-
-
-
-
-
 //===== Loading XML Data =====
 /**
  * Reads XML elements to create roads, traffic lights, cars, and car factories
@@ -33,8 +24,11 @@ TrafficSimulation::TrafficSimulation(const std::string &doc_name) {
                 // return status;
             }
         }
+
     }
     else { LoadElement(root); }
+    connect_to_road();
+    sort_roads();
 
     // checks should be done here, after everything is loaded
     // otherwise it may be that a car can't be placed before the road
@@ -51,18 +45,6 @@ int TrafficSimulation::LoadElement(TiXmlElement* element) {
     std::string elementType = element->Value();
     // debug only
     // std::cout << "Loading element: " << elementType << std::endl;
-
-    /*
-    // Handle root simulation element
-    if (elementType == "SIMULATION") {
-        for (TiXmlElement* child = element->FirstChildElement();
-             child;
-             child = child->NextSiblingElement()) {
-            LoadElement(child);
-        }
-        return 0;
-    }
-    */
 
     // Load road information
     if (elementType == "BAAN") {
@@ -110,24 +92,21 @@ int TrafficSimulation::LoadElement(TiXmlElement* element) {
         }
 
         try {
-            newLight.set_road_name(roadElem->GetText());
+            std::string roadName = roadElem->GetText();
+            newLight.set_road(get_road(roadName));
             newLight.set_position(std::stoi(posElem->GetText()));
             newLight.set_cyclus(std::stoi(cycleElem->GetText()));
 
             // Check if there is a road
-            bool roadExists = false;
-            for (const Road& r : roads) {
-                if (r.get_name() == newLight.get_road_name()) {
-                    roadExists = true;
-                    break;
-                }
-            }
+            Road* road = newLight.get_road();
 
-            if (!roadExists) {
+            if (road == nullptr) {
+                newLight.set_temp_name(roadName);
                 // std::cerr << "TRAFFIC LIGHT ROAD NOT FOUND: " << newLight.get_road_name() << std::endl;
                 // error message !!!
                 return 4;
             }
+            road->add_light(&newLight);
 
             trafficlights.push_back(newLight); // Add light to global list
         }
@@ -161,21 +140,23 @@ int TrafficSimulation::LoadElement(TiXmlElement* element) {
             int position = std::stoi(posElem->GetText());
 
             // Check if road actually exists
-            bool roadExists = false;
-            for (const Road& r : roads) {
-                if (r.get_name() == roadName) {
-                    roadExists = true;
-                    break;
-                }
-            }
+            Road* road = get_road(roadName);
 
-            if (!roadExists) {
+
+            Vehicle new_car(road, position, typ);
+
+            if (road == nullptr) {
+                new_car.set_temp_name(roadName);
                 // std::cerr << "VEHICLE ROAD NOT FOUND: " << roadName << std::endl;
                 // error message !!!
-                return 4;
+
+            } else {
+                vehicles.emplace_back(new_car);
+                road->add_car(&vehicles.back());
+                std::cout << road->get_cars()[road->get_cars().size()-1]->get_position() << std::endl;
             }
 
-            vehicles.emplace_back(roadName, position, typ);
+
         }
         catch (...) {
             // std::cerr << "INVALID VEHICLE NUMBER FORMAT" << std::endl;
@@ -184,7 +165,7 @@ int TrafficSimulation::LoadElement(TiXmlElement* element) {
     }
     //--- Load Car Factory ---
     else if (elementType == "VOERTUIGGENERATOR") {
-        VehicleGenerator newGen;
+
         TiXmlElement* roadElem = element->FirstChildElement("baan");
         TiXmlElement* freqElem = element->FirstChildElement("frequentie");
 
@@ -196,32 +177,27 @@ int TrafficSimulation::LoadElement(TiXmlElement* element) {
         }
 
         try {
-            newGen.road = roadElem->GetText();
-            newGen.frequency = std::stoi(freqElem->GetText());
-
+            std::string roadName = roadElem->GetText();
+            Road* road = get_road(roadName);
+            int frequency = std::stoi(freqElem->GetText());
+            VehicleGenerator newGen(road, frequency);
             // Check for positive frequency
-            if (newGen.frequency <= 0) {
+            if (frequency <= 0) {
                 // std::cerr << "BAD GENERATOR FREQUENCY: " << newGen.frequency << std::endl;
                 // error message !!!
                 return 3;
             }
 
             // Check if road actually exists
-            bool roadExists = false;
-            for (const Road& r : roads) {
-                if (r.get_name() == newGen.road) {
-                    roadExists = true;
-                    break;
-                }
-            }
-
-            if (!roadExists) {
+            if (road == nullptr) {
+                newGen.set_temp_name(roadName);
                 // std::cerr << "GENERATOR ROAD NOT FOUND: " << newGen.road << std::endl;
                 // error message !!!
                 return 4;
             }
 
             vehicle_gens.push_back(newGen);
+
         }
         catch (...) {
             // std::cerr << "INVALID GENERATOR NUMBER FORMAT" << std::endl;
@@ -341,112 +317,55 @@ int TrafficSimulation::LoadElement(TiXmlElement* element) {
  */
 
 void TrafficSimulation::UpdateVehicleMovement(double dt, double current_time) {
-    std::vector<Vehicle> updatedVehicles;
-
+    REQUIRE(current_time >= 0, "time can't be negative");
+    REQUIRE(dt > 0, "time steps can't be negative or zero");
     // Update each vehicle
-    for (Vehicle& vehicle : vehicles) {
-        // Find the road the vehicle is on
-        Road* currentRoad = nullptr;
-        for (Road& r : roads) {
-            if (r.get_name() == vehicle.get_road_name()) {
-                currentRoad = &r;
-                break;
-            }
-        }
-        if (!currentRoad) continue; // Skip if road not found
-
-        // Traffic light logic
-        bool shouldStop = false;
-        double effectiveSpeed = Constants::MaxAbsoluteSpeed;
-
-        for (const TrafficLight& light : trafficlights) {
-            if (light.get_road_name() == vehicle.get_road_name()) {
-                double distanceToLight = light.get_position() - vehicle.get_position();
-
-                // Only respond to lights ahead of the vehicle
-                if (distanceToLight > 0 && !light.is_green()) {
-                    // Red light logic
-                    if (distanceToLight <= Constants::StopDistance) {
-                        shouldStop = true;
-
-                        break;  // Stop checking other lights
-                    }
-                    else if (distanceToLight <= Constants::DecelerationDistance) {
-                        effectiveSpeed = Constants::SlowdownFactor * Constants::MaxAbsoluteSpeed;
-                        // debug
-                        // std::cout << "Car at " << vehicle.get_position() << "m slowing for light ahead" << std::endl;
-                    }
-                }
-            }
-        }
-
-
-            vehicle.set_acceleration(ComputeAcceleration(vehicle, effectiveSpeed));
-
-
-        // Update position and speed
-        if (shouldStop) {
-
-            vehicle.set_acceleration(-Constants::MaxDeceleration);
-
-            if (vehicle.get_speed() + vehicle.get_acceleration() * dt < 0) {
-                // We would go negative, so use formula B.2 for stopping completely
-                vehicle.move_position(-(vehicle.get_speed() * vehicle.get_speed()) / (2 * vehicle.get_acceleration()));
-                vehicle.set_speed(0);
-            } else {
-
-                vehicle.add_speed(vehicle.get_acceleration() * dt);
-                vehicle.move_position(vehicle.get_speed() * dt + 0.5 * vehicle.get_acceleration() * dt * dt);
-            }
-        } else {
-            // Normal movement using formula B.2
-            if (vehicle.get_speed() + vehicle.get_acceleration() * dt < 0) {
-                // Speed would go negative, so stop completely
-                vehicle.move_position(-(vehicle.get_speed() * vehicle.get_speed()) / (2 * vehicle.get_acceleration()));
-                vehicle.set_speed(0);
-            } else {
-                // Update speed
-                vehicle.add_speed(vehicle.get_acceleration() * dt);
-                // Limit speed to effective max speed
-                if (vehicle.get_speed() > effectiveSpeed) {
-                    vehicle.set_speed(effectiveSpeed);
-                }
-                // Update position
-                vehicle.move_position(vehicle.get_speed() * dt + 0.5 * vehicle.get_acceleration() * dt * dt);
-            }
-        }
-
-        // Remove vehicles that exit the road
-        if (vehicle.get_position() >= currentRoad->get_length() - Constants::VehicleLength) {
-            // debug
-            // std::cout << "Vehicle exited " << vehicle.get_road_name()
-            //          << " at " << vehicle.get_position() << "m" << std::endl;
-            continue; // Skip adding to updatedVehicles
-        }
-        updatedVehicles.push_back(vehicle);
+    for (Vehicle& car : vehicles) {
+        car.update(dt, current_time);
+        std::cout << car.get_position() << std::endl;
+    }
+    std::cout << std::endl;
+    for (Road& road : roads) {
+        road.remove_offroad_cars();
     }
 
-    // Update traffic lights first
+    remove_offroad_cars();
+}
 
-    vehicles = updatedVehicles;
+void TrafficSimulation::remove_offroad_cars() {
+    std::vector<Vehicle> on_road;
+    for (unsigned int i = 0; i<vehicles.size();) {
+        if (vehicles[i].get_road() == nullptr) {
+            vehicles.erase(vehicles.begin() + int(i));
+        }
+        else {
+            i++; }
+    }
 }
 
 // goes over all and updates them every time step
-int TrafficSimulation::update_cycle() {
+int TrafficSimulation::update_cycle(int repeatx) {
+
     double time = 0;
     bool cycle_on = true;
     while (cycle_on) {
         double new_time = time + 1;
 
         // update all
-        UpdateVehicleMovement(1, new_time);
-
         UpdateTrafficLights(new_time);
+
+        UpdateVehicleMovement(1, new_time);
 
         GenerateVehicles(new_time);
 
         time = new_time;
-        if (vehicles.empty()) { cycle_on = false; }
+        if (int(time)%10 == 0) {
+            for (Road& road : roads) {
+                std::cout << road.get_cars().size() << std::endl;
+            }
+            std::cout << std::endl;
+        }
+        if (vehicles.empty() or time == repeatx) { cycle_on = false; }
     }
 
     return 0;
@@ -462,32 +381,37 @@ int TrafficSimulation::update_cycle() {
 // Makes new car
 
 void TrafficSimulation::GenerateVehicles(double current_time) {
+    REQUIRE(current_time >= 0, "time can't be negative");
     for (VehicleGenerator& factory : vehicle_gens) {
+
+        // !!! temp to compile
+        if (factory.get_road() == nullptr) {
+            return;
+        }
+
+
+        /*
         // Check if enough time has passed since last spawn
         if ((current_time - factory.last_generated) < factory.frequency) continue;
 
         // Debug message
-        /*
+
         std::cout << "Generator check: "
                   << (current_time - factory.last_generated)
                   << "/" << factory.frequency << "s" << std::endl;
-        */
-        // Find the target road
-        Road* targetRoad = nullptr;
-        for (Road& r : roads) {
-            if (r.get_name() == factory.road) {
-                targetRoad = &r;
-                break;
-            }
-        }
-        if (!targetRoad) {
-            std::cout << "Couldn't find road " << factory.road << std::endl;
+
+
+        if (!factory.get_road()) {
+            std::cout << "Couldn't find road " << factory.get_road()->get_name() << std::endl;
             continue;
         }
 
         // Check space at road start
         bool spaceFree = true;
         double checkDistance = 2 * Constants::VehicleLength;
+
+        // !!!
+        // road.get_first_car()
 
         for (const Vehicle& car : vehicles) {
             if (car.get_road_name() == factory.road && car.get_position() < checkDistance) {
@@ -498,13 +422,19 @@ void TrafficSimulation::GenerateVehicles(double current_time) {
             }
         }
 
+
         // Create new vehicle if space available
+
+
+
+         * factory.road.add_car()
         if (spaceFree) {
             vehicles.emplace_back(factory.road, 0.0, 10.0, Constants::MaxAcceleration);
             factory.last_generated = current_time;
             // debug
             // std::cout << "New car spawned on " << factory.road << "!" << std::endl;
         }
+         */
     }
 }
 
@@ -515,53 +445,10 @@ void TrafficSimulation::GenerateVehicles(double current_time) {
  * @return Acceleration value
  */
 
-
-double TrafficSimulation::ComputeAcceleration(const Vehicle& car, double effective_vmax) {
-    Vehicle* frontCar = nullptr;
-    double gap = std::numeric_limits<double>::max(); // Start with maximum possible value
-
-    // Find the closest car ahead
-    for (const Vehicle& other : vehicles) {
-        if (other.get_road_name() == car.get_road_name() and other.get_position() > car.get_position()) {
-
-            double distance = other.get_position() - car.get_position() - Constants::VehicleLength; // Add this
-            if (distance < gap) {
-                gap = distance;
-                frontCar = const_cast<Vehicle*>(&other);
-            }
-        }
-    }
-
-    // Calculate following distance math between 2 cars
-    double delta = 0.0;
-    if (frontCar) {
-
-        double speedDiff = car.get_speed() - frontCar->get_speed();
-        if (gap < Constants::DecelerationDistance) {
-            // Debug
-            // std::cout << "Gap: " << gap<< ", SpeedDiff: " << speedDiff<< ", delta: " << delta << std::endl; // Debug
-            delta = (Constants::MinFollowingDistance +
-                    std::max(0.0, (car.get_speed() * speedDiff) /
-                    (2 * std::sqrt(Constants::MaxAcceleration * Constants::MaxDeceleration)))) / gap;
-        }
-    }
-
-    // Calculate acceleration using formula from specification B.3
-    double acceleration = Constants::MaxAcceleration *
-                         (1 - pow(car.get_speed()/effective_vmax, 4) - delta*delta);
-
-
-
-    return acceleration;
-
-
-}
-
-
-
 //===== DEBUG TOOLS =====
 /** Prints current simulation status */
 
+/*
 void TrafficSimulation::PrintSituation() {
     // gives the vehicle number and his values
     for (int i = 0; i<int (vehicles.size()); i++) {
@@ -569,23 +456,84 @@ void TrafficSimulation::PrintSituation() {
         vehicles[i].print();
     }
 }
+*/
 
 //===== TRAFFIC LIGHT UPDATER (Changing Light Colors) =====
 
 /** Updates traffic light colors based on cycle time */
 
 void TrafficSimulation::UpdateTrafficLights(double current_time) {
+    REQUIRE(current_time >= 0, "time can't be negative");
     for (TrafficLight& tlight : trafficlights) {
-        double cycleTime = tlight.get_cyclus() * Constants::SimulationTimeStep;  // Convert to seconds!
-        if (current_time - tlight.get_last_change_time() >= cycleTime) {
-            tlight.change_light();
-            tlight.set_last_change_time(current_time);
-        }
+        tlight.update(current_time);
     }
 }
 
 
+std::vector<Road> TrafficSimulation::get_roads() { return roads; }
+std::vector<TrafficLight> TrafficSimulation::get_lights() { return trafficlights; }
+std::vector<Vehicle> TrafficSimulation::get_vehicles() { return vehicles; }
+std::vector<VehicleGenerator> TrafficSimulation::get_generators() { return vehicle_gens; }
+std::vector<Bushalte> TrafficSimulation::get_busstops() { return bushalten; }
+std::vector<Kruispunt> TrafficSimulation::get_crossroads() { return kruispunten; }
 
+Road* TrafficSimulation::get_road(const std::string& name) {
+    REQUIRE(!name.empty(), "road name can't be empty");
+    for (Road& road : roads) {
+        if (road.get_name() == name) {
+            return &road;
+        }
+    }
+    return nullptr;
+}
 
+void TrafficSimulation::connect_to_road() {
+    for (unsigned int i = 0; i<vehicles.size();) {
+        if (vehicles[i].get_road() == nullptr) {
+            vehicles[i].set_road(get_road(vehicles[i].get_temp_name()));
+            vehicles[i].set_temp_name("");
+            if (vehicles[i].get_road() == nullptr) {
+                vehicles.erase(vehicles.begin() + int(i));
+            } else {
+                Road* road = vehicles[i].get_road();
+                vehicles[i].get_road()->add_car(&vehicles[i]);
+                std::cout << road->get_cars()[road->get_cars().size()-1]->get_position() << std::endl;
+                i++;
+            }
+        } else { i++; }
+    }
 
+    for (unsigned int i = 0; i<trafficlights.size();) {
+        if (trafficlights[i].get_road() == nullptr) {
+            trafficlights[i].set_road(get_road(trafficlights[i].get_temp_name()));
+            trafficlights[i].set_temp_name("");
+            if (vehicles[i].get_road() == nullptr) {
+                vehicles.erase(vehicles.begin() + int(i));
+            } else {
+                trafficlights[i].get_road()->add_light(&trafficlights[i]);
+                i++;
+            }
+        } else { i++; }
+    }
 
+    for (unsigned int i = 0; i<vehicle_gens.size();) {
+        if (vehicle_gens[i].get_road() == nullptr) {
+            vehicle_gens[i].set_road(get_road(vehicle_gens[i].get_temp_name()));
+            vehicle_gens[i].set_temp_name("");
+            if (vehicles[i].get_road() == nullptr) {
+                vehicles.erase(vehicles.begin() + int(i));
+            } else { i++; }
+        } else { i++; }
+    }
+}
+
+bool sort_cars(Vehicle& car1, Vehicle& car2) {
+    return car1.get_position() < car2.get_position();
+}
+
+void TrafficSimulation::sort_roads() {
+    std::sort(vehicles.begin(), vehicles.end(), sort_cars);
+    for (Road& road : roads) {
+        road.sort_all();
+    }
+}
